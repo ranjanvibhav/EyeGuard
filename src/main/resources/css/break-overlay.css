@@ -1,0 +1,120 @@
+.root {
+    /* Color Palette */
+    -fx-color-background: #0F1923;
+    -fx-color-surface: #1A2635;
+    -fx-color-surface-elevated: #243447;
+    -fx-color-accent: #2EC4B6;
+    -fx-color-accent-hover: #3DD6C8;
+    -fx-color-text-primary: #E8F4F8;
+    -fx-color-text-secondary: #7A9BB5;
+    -fx-color-warning: #F4A261;
+    -fx-color-success: #57CC99;
+    -fx-color-danger: #E63946;
+    -fx-color-border: #2A3F54;
+
+    /* Base styles */
+    -fx-font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+}
+
+.overlay-container {
+    -fx-background-color: rgba(15, 25, 35, 0.97);
+}
+
+.overlay-content {
+    -fx-alignment: center;
+}
+
+/* Typography */
+.title-label {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text-primary;
+    -fx-text-alignment: center;
+}
+
+.subtitle-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-text-alignment: center;
+}
+
+/* Countdown Stack */
+.countdown-container {
+    -fx-alignment: center;
+}
+
+.breathing-circle {
+    -fx-fill: radial-gradient(center 50% 50%, radius 50%, rgba(46, 196, 182, 0.2) 0%, rgba(46, 196, 182, 0) 100%);
+    /* animation property is not supported by JavaFX but kept as reference */
+    animation: breathe 4s infinite ease-in-out;
+}
+
+.countdown-ring-label {
+    -fx-font-family: "Courier New", monospace;
+    -fx-font-size: 72px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-accent;
+}
+
+.seconds-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-color-text-secondary;
+}
+
+/* Instructions */
+.instruction-label {
+    -fx-font-size: 16px;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-text-alignment: center;
+}
+
+.instruction-highlight {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text-primary;
+    -fx-text-alignment: center;
+}
+
+/* Buttons */
+.btn-primary {
+    -fx-background-color: -fx-color-accent;
+    -fx-text-fill: -fx-color-background;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: -fx-color-accent-hover;
+}
+
+.btn-primary:disabled {
+    -fx-opacity: 0.4;
+    -fx-cursor: not-allowed;
+}
+
+.btn-outlined-warning {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-color-warning;
+    -fx-border-color: -fx-color-warning;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-outlined-warning:hover {
+    -fx-background-color: rgba(244, 162, 97, 0.1);
+}
+
+.btn-outlined-warning:disabled {
+    -fx-opacity: 0.4;
+    -fx-cursor: not-allowed;
+}
+
+/* Disable default focus ring */
+.button:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-color-accent;
+}

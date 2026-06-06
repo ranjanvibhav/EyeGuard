@@ -1,0 +1,236 @@
+.root {
+    /* Color Palette */
+    -fx-color-background: #0F1923;
+    -fx-color-surface: #1A2635;
+    -fx-color-surface-elevated: #243447;
+    -fx-color-accent: #2EC4B6;
+    -fx-color-accent-hover: #3DD6C8;
+    -fx-color-text-primary: #E8F4F8;
+    -fx-color-text-secondary: #7A9BB5;
+    -fx-color-warning: #F4A261;
+    -fx-color-success: #57CC99;
+    -fx-color-danger: #E63946;
+    -fx-color-border: #2A3F54;
+
+    /* Base styles */
+    -fx-background-color: -fx-color-background;
+    -fx-font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+}
+
+.main-container {
+    -fx-background-color: -fx-color-background;
+}
+
+/* Header styles */
+.header-bar {
+    -fx-background-color: -fx-color-surface;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.logo-placeholder {
+    -fx-fill: -fx-color-accent;
+}
+
+.app-title {
+    -fx-text-fill: -fx-color-text-primary;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.status-badge {
+    -fx-text-fill: white;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-padding: 4px 12px;
+    -fx-background-radius: 12px;
+    -fx-alignment: center;
+}
+
+.status-badge-active {
+    -fx-background-color: -fx-color-success;
+}
+
+/* Card layout */
+.card {
+    -fx-background-color: -fx-color-surface;
+    -fx-background-radius: 16px;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 1px;
+    -fx-border-radius: 16px;
+    /* Drop shadow effect */
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 10, 0, 0, 4);
+}
+
+.card:hover {
+    -fx-background-color: -fx-color-surface-elevated;
+    -fx-border-color: -fx-color-accent;
+}
+
+/* Typography styles */
+.section-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-font-weight: bold;
+}
+
+.timer-label {
+    -fx-font-family: "Courier New", monospace;
+    -fx-font-size: 52px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-accent;
+}
+
+.desc-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-color-text-secondary;
+}
+
+/* Progress Bar */
+.custom-progress-bar .track {
+    -fx-background-color: -fx-color-surface-elevated;
+    -fx-background-radius: 3px;
+    -fx-background-insets: 0;
+}
+
+.custom-progress-bar .bar {
+    -fx-background-color: -fx-color-accent;
+    -fx-background-radius: 3px;
+    -fx-background-insets: 0;
+}
+
+/* Stats styles */
+.stat-value {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text-primary;
+}
+
+.stat-value-warning {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-warning;
+}
+
+.stat-value-success {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-success;
+}
+
+.stat-label {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-color-text-secondary;
+}
+
+.stat-divider {
+    -fx-background-color: -fx-color-border;
+    -fx-pref-width: 1px;
+    -fx-opacity: 0.5;
+}
+
+/* Session styles */
+.session-duration {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text-primary;
+}
+
+.streak-text {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-accent;
+}
+
+/* Buttons bar and Buttons */
+.button-bar {
+    -fx-background-color: -fx-color-background;
+}
+
+.btn-primary {
+    -fx-background-color: -fx-color-accent;
+    -fx-text-fill: -fx-color-background;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: -fx-color-accent-hover;
+}
+
+.btn-outlined-warning {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-color-warning;
+    -fx-border-color: -fx-color-warning;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-outlined-warning:hover {
+    -fx-background-color: rgba(244, 162, 97, 0.1);
+}
+
+.btn-outlined-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-outlined-secondary:hover {
+    -fx-background-color: rgba(122, 155, 181, 0.1);
+}
+
+/* Disable ugly default JavaFX focus ring */
+.button:focused, .card:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-color-accent;
+}
+
+/* ScrollPane customization */
+.content-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.content-scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Custom ScrollBar styling */
+.content-scroll-pane .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.content-scroll-pane .scroll-bar:vertical .track {
+    -fx-background-color: -fx-color-surface;
+    -fx-background-radius: 4px;
+}
+
+.content-scroll-pane .scroll-bar:vertical .thumb {
+    -fx-background-color: -fx-color-border;
+    -fx-background-radius: 4px;
+}
+
+.content-scroll-pane .scroll-bar:vertical .thumb:hover {
+    -fx-background-color: -fx-color-accent;
+}
+
+.content-scroll-pane .scroll-bar:vertical .increment-button,
+.content-scroll-pane .scroll-bar:vertical .decrement-button {
+    -fx-background-color: transparent;
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+

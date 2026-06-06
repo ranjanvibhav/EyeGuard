@@ -1,0 +1,134 @@
+package com.eyeguard.app;
+
+import com.eyeguard.exception.EyeGuardException;
+import com.eyeguard.service.DashboardService;
+import com.eyeguard.service.DashboardServiceImpl;
+import com.eyeguard.service.TrayService;
+import com.eyeguard.service.TrayServiceImpl;
+import com.eyeguard.view.MainWindowController;
+import com.eyeguard.viewmodel.DashboardViewModel;
+import com.eyeguard.viewmodel.MainWindowViewModel;
+import com.eyeguard.viewmodel.TrayViewModel;
+import java.io.IOException;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Main application class for EyeGuard.
+ * Manages the JavaFX application lifecycle, including system tray icon wiring.
+ */
+public class EyeGuardApp extends Application {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(EyeGuardApp.class);
+
+    private static final String APPLICATION_TITLE = "EyeGuard";
+    private static final double STAGE_WIDTH = 420.0;
+    private static final double STAGE_HEIGHT = 560.0;
+    private static final String FXML_PATH = "/fxml/main-window.fxml";
+
+    private Stage primaryStage;
+    private TrayService trayService;
+    private DashboardViewModel dashboardViewModel;
+    private DashboardService dashboardService;
+
+    /**
+     * Starts the JavaFX application by initializing the primary stage and loading the UI.
+     *
+     * @param primaryStage the primary stage for this application
+     */
+    @Override
+    public void start(final Stage primaryStage) {
+        try {
+            LOGGER.info("EyeGuard application starting...");
+            this.primaryStage = primaryStage;
+
+            final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
+            final Parent root = loader.load();
+
+            final MainWindowViewModel viewModel = new MainWindowViewModel();
+            final MainWindowController controller = loader.getController();
+            controller.setViewModel(viewModel);
+
+            final Scene scene = new Scene(root);
+            setupStage(primaryStage, scene);
+            setupTray(primaryStage);
+            primaryStage.show();
+
+            LOGGER.info("Main window loaded successfully");
+        } catch (final IOException exception) {
+            LOGGER.error("Failed to load FXML layout from " + FXML_PATH, exception);
+            throw new EyeGuardException("Failed to initialize EyeGuard user interface", exception);
+        }
+    }
+
+    /**
+     * Configures the visual properties of the stage.
+     *
+     * @param stage the stage to configure
+     * @param scene the scene to bind to the stage
+     */
+    private void setupStage(final Stage stage, final Scene scene) {
+        stage.setScene(scene);
+        stage.setTitle(APPLICATION_TITLE);
+        stage.setWidth(STAGE_WIDTH);
+        stage.setHeight(STAGE_HEIGHT);
+        stage.setResizable(false);
+        stage.centerOnScreen();
+    }
+
+    /**
+     * Instantiates the TrayViewModel and initializes the SystemTray service.
+     *
+     * @param stage the primary stage of the application
+     */
+    private void setupTray(final Stage stage) {
+        dashboardViewModel = new DashboardViewModel();
+        dashboardService = new DashboardServiceImpl(dashboardViewModel);
+
+        final TrayViewModel trayViewModel = new TrayViewModel();
+        trayService = new TrayServiceImpl(
+            stage::show,
+            dashboardService::showDashboard,
+            () -> LOGGER.info("Snooze from tray"),
+            () -> {
+                trayViewModel.togglePause();
+                trayService.updatePauseMenuItem(trayViewModel.getPauseMenuItemText());
+            },
+            this::openSettingsWindow,
+            Platform::exit
+        );
+        trayService.initializeTray();
+
+        Platform.setImplicitExit(false);
+        stage.setOnCloseRequest(e -> {
+            e.consume();
+            stage.hide();
+            trayService.updateTooltip(trayViewModel.getTooltipText());
+            LOGGER.info("Main window hidden, app running in tray");
+        });
+    }
+
+    /**
+     * Placeholder method to trigger the settings window from the tray menu.
+     */
+    private void openSettingsWindow() {
+        LOGGER.info("Opening settings from tray");
+    }
+
+    /**
+     * Handles cleanup and logging on application shutdown.
+     */
+    @Override
+    public void stop() {
+        if (trayService != null) {
+            trayService.dispose();
+        }
+        LOGGER.info("EyeGuard application stopped");
+    }
+}

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.eyeguard.view.MainWindowController"
+            stylesheets="@../css/main-window.css"
+            styleClass="main-container">
+
+    <top>
+        <HBox styleClass="header-bar" alignment="CENTER_LEFT" spacing="12">
+            <padding>
+                <Insets top="16" right="24" bottom="16" left="24"/>
+            </padding>
+            <Circle radius="14" styleClass="logo-placeholder"/>
+            <Label text="EyeGuard" styleClass="app-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="statusBadge" styleClass="status-badge"/>
+        </HBox>
+    </top>
+
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" styleClass="content-scroll-pane">
+            <VBox spacing="24" alignment="TOP_CENTER" styleClass="content-container">
+                <padding>
+                    <Insets top="24" right="32" bottom="24" left="32"/>
+                </padding>
+
+                <!-- Card 1: Next Break Timer -->
+                <VBox styleClass="card" spacing="12">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <Label text="NEXT BREAK IN" styleClass="section-label"/>
+                    <Label fx:id="countdownLabel" styleClass="timer-label"/>
+                    <Label fx:id="durationLabel" styleClass="desc-label"/>
+                    <ProgressBar fx:id="timerProgressBar" styleClass="custom-progress-bar" maxWidth="Infinity" prefHeight="6"/>
+                </VBox>
+
+                <!-- Card 2: Today's Stats -->
+                <VBox styleClass="card" spacing="16">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <Label text="TODAY" styleClass="section-label"/>
+                    <HBox alignment="CENTER" spacing="0">
+                        <!-- Column 1 -->
+                        <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="4">
+                            <Label fx:id="breaksTakenLabel" styleClass="stat-value"/>
+                            <Label text="Breaks Taken" styleClass="stat-label"/>
+                        </VBox>
+                        <Separator orientation="VERTICAL" styleClass="stat-divider"/>
+                        <!-- Column 2 -->
+                        <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="4">
+                            <Label fx:id="snoozedLabel" styleClass="stat-value-warning"/>
+                            <Label text="Snoozed" styleClass="stat-label"/>
+                        </VBox>
+                        <Separator orientation="VERTICAL" styleClass="stat-divider"/>
+                        <!-- Column 3 -->
+                        <VBox alignment="CENTER" HBox.hgrow="ALWAYS" spacing="4">
+                            <Label fx:id="complianceLabel" styleClass="stat-value-success"/>
+                            <Label text="Compliance" styleClass="stat-label"/>
+                        </VBox>
+                    </HBox>
+                </VBox>
+
+                <!-- Card 3: Current Session -->
+                <VBox styleClass="card" spacing="10">
+                    <padding>
+                        <Insets top="20" right="20" bottom="20" left="20"/>
+                    </padding>
+                    <Label text="SESSION" styleClass="section-label"/>
+                    <Label fx:id="sessionDurationLabel" styleClass="session-duration"/>
+                    <Label fx:id="streakLabel" styleClass="streak-text"/>
+                </VBox>
+            </VBox>
+        </ScrollPane>
+    </center>
+
+    <bottom>
+        <HBox spacing="12" alignment="CENTER" styleClass="button-bar">
+            <padding>
+                <Insets top="16" right="24" bottom="24" left="24"/>
+            </padding>
+            <Button fx:id="snoozeButton" text="Snooze 5 min" onAction="#handleSnooze"
+                    styleClass="btn-outlined-warning" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="40"/>
+            <Button fx:id="pauseButton" text="Pause" onAction="#handlePause"
+                    styleClass="btn-outlined-secondary" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="40"/>
+            <Button fx:id="settingsButton" text="Settings" onAction="#handleSettings"
+                    styleClass="btn-primary" HBox.hgrow="ALWAYS" maxWidth="Infinity" prefHeight="40"/>
+        </HBox>
+    </bottom>
+
+</BorderPane>

@@ -1,0 +1,255 @@
+.root {
+    /* Color Palette */
+    -fx-color-background: #0F1923;
+    -fx-color-surface: #1A2635;
+    -fx-color-surface-elevated: #243447;
+    -fx-color-accent: #2EC4B6;
+    -fx-color-accent-hover: #3DD6C8;
+    -fx-color-text-primary: #E8F4F8;
+    -fx-color-text-secondary: #7A9BB5;
+    -fx-color-warning: #F4A261;
+    -fx-color-success: #57CC99;
+    -fx-color-danger: #E63946;
+    -fx-color-border: #2A3F54;
+
+    /* Base styles */
+    -fx-background-color: -fx-color-background;
+    -fx-font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+}
+
+.settings-container {
+    -fx-background-color: -fx-color-background;
+}
+
+/* Header bar */
+.settings-header {
+    -fx-background-color: -fx-color-surface;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.settings-title {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text-primary;
+}
+
+.btn-flat {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-font-size: 18px;
+    -fx-cursor: hand;
+    -fx-padding: 4px;
+}
+
+.btn-flat:hover {
+    -fx-text-fill: -fx-color-danger;
+}
+
+/* TabPane */
+.settings-tab-pane {
+    -fx-tab-max-height: 40px;
+    -fx-tab-min-height: 40px;
+}
+
+.settings-tab-pane .tab-header-area {
+    -fx-padding: 0;
+    -fx-background-color: -fx-color-surface;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.settings-tab-pane .tab-header-background {
+    -fx-background-color: -fx-color-surface;
+}
+
+.settings-tab-pane .tab {
+    -fx-background-color: transparent;
+    -fx-padding: 0 24px;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.settings-tab-pane .tab .tab-label {
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.settings-tab-pane .tab:selected {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -fx-color-accent transparent;
+    -fx-border-width: 0 0 3px 0;
+}
+
+.settings-tab-pane .tab:selected .tab-label {
+    -fx-text-fill: -fx-color-text-primary;
+}
+
+.settings-tab-pane .tab-content-area {
+    -fx-background-color: -fx-color-background;
+}
+
+.tab-content-container {
+    -fx-background-color: -fx-color-background;
+}
+
+/* Section Headings */
+.section-heading {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-text-primary;
+}
+
+.section-description {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-color-text-secondary;
+}
+
+.range-to-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-padding: 20px 0 0 0;
+}
+
+.slider-value-label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-color-accent;
+    -fx-min-width: 60px;
+}
+
+.settings-divider {
+    -fx-background-color: -fx-color-border;
+    -fx-opacity: 0.5;
+}
+
+/* ToggleSwitch styled using CheckBox */
+.toggle-switch-checkbox .mark {
+    -fx-background-color: transparent;
+    -fx-shape: null;
+}
+
+.toggle-switch-checkbox .box {
+    -fx-background-color: -fx-color-border, white;
+    -fx-background-radius: 10px, 8px;
+    -fx-background-insets: 0, 2 18 2 2; /* off state: thumb is left */
+    -fx-min-width: 36px;
+    -fx-min-height: 20px;
+    -fx-max-width: 36px;
+    -fx-max-height: 20px;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.toggle-switch-checkbox:selected .box {
+    -fx-background-color: -fx-color-accent, white;
+    -fx-background-insets: 0, 2 2 2 18; /* on state: thumb is right */
+}
+
+/* Sliders */
+.slider .track {
+    -fx-background-color: -fx-color-surface-elevated;
+    -fx-background-insets: 0;
+    -fx-background-radius: 4px;
+    -fx-pref-height: 6px;
+}
+
+.slider .thumb {
+    -fx-background-color: -fx-color-accent;
+    -fx-background-radius: 8px;
+    -fx-min-width: 16px;
+    -fx-min-height: 16px;
+    -fx-cursor: hand;
+}
+
+.slider .thumb:hover {
+    -fx-background-color: -fx-color-accent-hover;
+}
+
+/* ChoiceBox */
+.choice-box {
+    -fx-background-color: -fx-color-surface;
+    -fx-text-fill: -fx-color-text-primary;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 4px 12px;
+    -fx-cursor: hand;
+}
+
+.choice-box:hover {
+    -fx-border-color: -fx-color-accent;
+}
+
+.choice-box .context-menu {
+    -fx-background-color: -fx-color-surface-elevated;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 1px;
+}
+
+.choice-box .menu-item {
+    -fx-padding: 6px 12px;
+}
+
+.choice-box .menu-item .label {
+    -fx-text-fill: -fx-color-text-primary;
+}
+
+.choice-box .menu-item:focused {
+    -fx-background-color: -fx-color-accent;
+}
+
+.choice-box .menu-item:focused .label {
+    -fx-text-fill: -fx-color-background;
+}
+
+.choice-box .label {
+    -fx-text-fill: -fx-color-text-primary;
+}
+
+/* Footer & Buttons */
+.settings-footer {
+    -fx-background-color: -fx-color-background;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 1 0 0 0;
+}
+
+.error-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-color-danger;
+}
+
+.btn-primary {
+    -fx-background-color: -fx-color-accent;
+    -fx-text-fill: -fx-color-background;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.btn-primary:hover {
+    -fx-background-color: -fx-color-accent-hover;
+}
+
+.btn-outlined-secondary {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-color-text-secondary;
+    -fx-border-color: -fx-color-border;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-outlined-secondary:hover {
+    -fx-background-color: rgba(122, 155, 181, 0.1);
+}
+
+/* Disable default focus ring */
+.button:focused, .choice-box:focused, .slider:focused {
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-color-accent;
+}
