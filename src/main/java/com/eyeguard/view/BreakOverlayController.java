@@ -92,6 +92,7 @@ public class BreakOverlayController implements Initializable {
 
         countdownLabel.textProperty().bind(viewModel.countdownTextProperty());
         doneButton.disableProperty().bind(viewModel.doneButtonEnabledProperty().not());
+        viewModel.ringProgressProperty().addListener((obs, oldVal, newVal) -> drawPlaceholderRing());
     }
 
     /**
@@ -135,6 +136,9 @@ public class BreakOverlayController implements Initializable {
     @FXML
     private void handleSnooze() {
         LOGGER.info("Snooze clicked from overlay");
+        if (viewModel != null && viewModel.getOnSnooze() != null) {
+            viewModel.getOnSnooze().run();
+        }
     }
 
     /**
@@ -143,5 +147,8 @@ public class BreakOverlayController implements Initializable {
     @FXML
     private void handleDone() {
         LOGGER.info("Done clicked from overlay");
+        if (viewModel != null && viewModel.getOnDone() != null) {
+            viewModel.getOnDone().run();
+        }
     }
 }

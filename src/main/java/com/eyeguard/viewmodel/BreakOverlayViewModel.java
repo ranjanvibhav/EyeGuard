@@ -27,11 +27,50 @@ public class BreakOverlayViewModel {
     private final BooleanProperty doneButtonEnabled = new SimpleBooleanProperty(INITIAL_DONE_BUTTON_ENABLED);
     private final StringProperty errorMessage = new SimpleStringProperty(INITIAL_ERROR_MESSAGE);
 
+    private Runnable onDone;
+    private Runnable onSnooze;
+
     /**
      * Constructs the BreakOverlayViewModel and logs initialization.
      */
     public BreakOverlayViewModel() {
         LOGGER.debug("BreakOverlayViewModel initialized with default placeholder values");
+    }
+
+    /**
+     * Sets the callback action for when the Done action is clicked.
+     *
+     * @param onDone the runnable callback
+     */
+    public void setOnDone(final Runnable onDone) {
+        this.onDone = onDone;
+    }
+
+    /**
+     * Gets the callback action for when the Done action is clicked.
+     *
+     * @return the runnable callback
+     */
+    public Runnable getOnDone() {
+        return onDone;
+    }
+
+    /**
+     * Sets the callback action for when the Snooze action is clicked.
+     *
+     * @param onSnooze the runnable callback
+     */
+    public void setOnSnooze(final Runnable onSnooze) {
+        this.onSnooze = onSnooze;
+    }
+
+    /**
+     * Gets the callback action for when the Snooze action is clicked.
+     *
+     * @return the runnable callback
+     */
+    public Runnable getOnSnooze() {
+        return onSnooze;
     }
 
     /**

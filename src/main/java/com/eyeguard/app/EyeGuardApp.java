@@ -14,6 +14,9 @@ import com.eyeguard.service.TrayServiceImpl;
 import com.eyeguard.view.MainWindowController;
 import com.eyeguard.viewmodel.DashboardViewModel;
 import com.eyeguard.viewmodel.MainWindowViewModel;
+import com.eyeguard.service.BreakServiceImpl;
+import com.eyeguard.service.OverlayServiceImpl;
+import com.eyeguard.viewmodel.BreakOverlayViewModel;
 import com.eyeguard.viewmodel.TrayViewModel;
 import java.io.IOException;
 import javafx.application.Application;
@@ -45,6 +48,8 @@ public class EyeGuardApp extends Application {
     private ConfigurationService configurationService;
     private Settings currentSettings;
     private TimerService timerService;
+    private BreakServiceImpl breakService;
+    private BreakOverlayViewModel breakOverlayViewModel;
 
     /**
      * Starts the JavaFX application by initializing the primary stage and loading the UI.
@@ -58,6 +63,10 @@ public class EyeGuardApp extends Application {
             this.primaryStage = primaryStage;
 
             loadApplicationSettings();
+            timerService = new TimerServiceImpl();
+            breakOverlayViewModel = new BreakOverlayViewModel();
+            final com.eyeguard.service.OverlayService overlayService = new com.eyeguard.service.OverlayServiceImpl(breakOverlayViewModel);
+            breakService = new BreakServiceImpl(timerService, overlayService, breakOverlayViewModel, configurationService);
             initializeTimer();
 
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
@@ -91,9 +100,8 @@ public class EyeGuardApp extends Application {
     }
 
     private void initializeTimer() {
-        timerService = new TimerServiceImpl();
         final int totalSeconds = currentSettings.getReminderIntervalMinutes() * 60;
-        timerService.setOnBreakDue(() -> LOGGER.info("Break is due!"));
+        timerService.setOnBreakDue(breakService::startBreak);
         timerService.start(totalSeconds);
         LOGGER.info("Timer started with interval: {}min", currentSettings.getReminderIntervalMinutes());
     }
@@ -126,7 +134,7 @@ public class EyeGuardApp extends Application {
         trayService = new TrayServiceImpl(
             stage::show,
             dashboardService::showDashboard,
-            () -> LOGGER.info("Snooze from tray"),
+            breakService::snoozeBreak,
             () -> {
                 trayViewModel.togglePause();
                 trayService.updatePauseMenuItem(trayViewModel.getPauseMenuItemText());
@@ -159,6 +167,9 @@ public class EyeGuardApp extends Application {
     public void stop() {
         if (timerService != null) {
             timerService.stop();
+        }
+        if (breakService != null) {
+            breakService.shutdown();
         }
         if (trayService != null) {
             trayService.dispose();
