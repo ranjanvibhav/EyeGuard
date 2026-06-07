@@ -1,6 +1,7 @@
 package com.eyeguard.viewmodel;
 
 import com.eyeguard.service.TimerService;
+import com.eyeguard.service.DndService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -28,6 +29,7 @@ public class TrayViewModel {
     private final BooleanProperty isPaused = new SimpleBooleanProperty(INITIAL_PAUSED);
     private final StringProperty pauseMenuItemText = new SimpleStringProperty(INITIAL_PAUSE_LABEL);
     private final StringProperty errorMessage = new SimpleStringProperty(INITIAL_ERROR);
+    private DndService dndService;
 
     /**
      * Constructs the TrayViewModel and logs initialization.
@@ -50,9 +52,38 @@ public class TrayViewModel {
     }
 
     /**
+     * Constructs the TrayViewModel bound to the TimerService and DndService.
+     *
+     * @param timerService the core countdown timer service
+     * @param dndService   the DND state coordination service
+     */
+    public TrayViewModel(final TimerService timerService, final DndService dndService) {
+        this.dndService = dndService;
+        timerService.countdownTextProperty().addListener((obs, oldVal, newVal) -> {
+            if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+                tooltipText.set("EyeGuard — Next break in: " + newVal);
+                statusMenuItemText.set("Next break in: " + newVal);
+            }
+        });
+        dndService.dndStateProperty().addListener((obs, old, newState) -> updatePauseMenuText(newState));
+        dndService.dndStatusTextProperty().addListener((obs, old, newVal) -> {
+            statusMenuItemText.set(newVal);
+            tooltipText.set("EyeGuard — " + newVal);
+        });
+    }
+
+    /**
      * Toggles the pause state of reminders and updates the pause menu item text.
      */
     public void togglePause() {
+        if (dndService != null) {
+            if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+                dndService.pause();
+            } else {
+                dndService.resume();
+            }
+            return;
+        }
         if (!isPaused.get()) {
             isPaused.set(true);
             pauseMenuItemText.set(LABEL_RESUME);
@@ -61,6 +92,15 @@ public class TrayViewModel {
             isPaused.set(false);
             pauseMenuItemText.set(INITIAL_PAUSE_LABEL);
             LOGGER.info("Reminders resumed");
+        }
+    }
+
+    private void updatePauseMenuText(final com.eyeguard.model.DndState state) {
+        switch (state) {
+            case INACTIVE -> pauseMenuItemText.set(INITIAL_PAUSE_LABEL);
+            case PAUSED -> pauseMenuItemText.set(LABEL_RESUME);
+            case SNOOZED -> pauseMenuItemText.set("Resume (Snoozed)");
+            case MEETING_MODE -> pauseMenuItemText.set("Resume (Meeting Mode)");
         }
     }
 

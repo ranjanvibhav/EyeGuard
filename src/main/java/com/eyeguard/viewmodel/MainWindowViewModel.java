@@ -2,6 +2,7 @@ package com.eyeguard.viewmodel;
 
 import com.eyeguard.model.TimerState;
 import com.eyeguard.service.TimerService;
+import com.eyeguard.service.DndService;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -40,6 +41,8 @@ public class MainWindowViewModel {
     private final StringProperty sessionDuration = new SimpleStringProperty(INITIAL_SESSION_DURATION);
     private final StringProperty streakText = new SimpleStringProperty(INITIAL_STREAK);
     private final StringProperty errorMessage = new SimpleStringProperty(INITIAL_ERROR);
+    private TimerService timerService;
+    private DndService dndService;
 
     /**
      * Constructs the MainWindowViewModel and logs initialization.
@@ -54,12 +57,74 @@ public class MainWindowViewModel {
      * @param timerService the core countdown timer service
      */
     public MainWindowViewModel(final TimerService timerService) {
+        this.timerService = timerService;
         nextBreakCountdown.bind(timerService.countdownTextProperty());
         timerProgress.bind(timerService.progressProperty());
         timerService.timerStateProperty().addListener((obs, oldState, newState) -> {
             updateStatusFromState(newState);
         });
         updateStatusFromState(timerService.getTimerState());
+    }
+
+    /**
+     * Constructs the MainWindowViewModel bound to the TimerService and DndService.
+     *
+     * @param timerService the core timer service
+     * @param dndService   the DND state service
+     */
+    public MainWindowViewModel(final TimerService timerService, final DndService dndService) {
+        this(timerService);
+        this.dndService = dndService;
+        dndService.dndStatusTextProperty().addListener((obs, old, newVal) -> {
+            updateStatusFromDnd(newVal);
+        });
+    }
+
+    /**
+     * Snoozes the active reminders.
+     *
+     * @param minutes minutes to snooze
+     */
+    public void handleSnooze(final int minutes) {
+        if (dndService != null) {
+            dndService.snooze(minutes);
+        }
+        LOGGER.info("Snooze requested for " + minutes + " minutes");
+    }
+
+    /**
+     * Toggles reminders pause/resume state.
+     */
+    public void handlePause() {
+        if (dndService != null) {
+            if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+                dndService.pause();
+            } else {
+                dndService.resume();
+            }
+        }
+    }
+
+    /**
+     * Enables meeting mode for the specified minutes.
+     *
+     * @param minutes meeting duration in minutes
+     */
+    public void handleMeetingMode(final int minutes) {
+        if (dndService != null) {
+            dndService.enableMeetingMode(minutes);
+        }
+        LOGGER.info("Meeting mode requested for " + minutes + " minutes");
+    }
+
+    private void updateStatusFromDnd(final String newVal) {
+        final com.eyeguard.model.DndState state = dndService.getDndState();
+        if (state == com.eyeguard.model.DndState.INACTIVE) {
+            updateStatusFromState(timerService.getTimerState());
+        } else {
+            statusText.set(state.name());
+            statusStyle.set("status-badge-paused");
+        }
     }
 
     private void updateStatusFromState(final TimerState state) {

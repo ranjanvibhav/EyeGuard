@@ -121,6 +121,9 @@ public class MainWindowController implements Initializable {
     @FXML
     private void handleSnooze() {
         LOGGER.info("Snooze button clicked");
+        if (viewModel != null) {
+            viewModel.handleSnooze(5);
+        }
     }
 
     /**
@@ -129,6 +132,9 @@ public class MainWindowController implements Initializable {
     @FXML
     private void handlePause() {
         LOGGER.info("Pause button clicked");
+        if (viewModel != null) {
+            viewModel.handlePause();
+        }
     }
 
     /**

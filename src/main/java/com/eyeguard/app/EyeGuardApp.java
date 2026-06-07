@@ -12,6 +12,7 @@ import com.eyeguard.service.TimerServiceImpl;
 import com.eyeguard.service.TrayService;
 import com.eyeguard.service.TrayServiceImpl;
 import com.eyeguard.view.MainWindowController;
+import com.eyeguard.service.DndServiceImpl;
 import com.eyeguard.viewmodel.DashboardViewModel;
 import com.eyeguard.viewmodel.MainWindowViewModel;
 import com.eyeguard.service.BreakServiceImpl;
@@ -50,6 +51,8 @@ public class EyeGuardApp extends Application {
     private TimerService timerService;
     private BreakServiceImpl breakService;
     private BreakOverlayViewModel breakOverlayViewModel;
+    private DndServiceImpl dndService;
+    private MainWindowViewModel mainViewModel;
 
     /**
      * Starts the JavaFX application by initializing the primary stage and loading the UI.
@@ -64,6 +67,7 @@ public class EyeGuardApp extends Application {
 
             loadApplicationSettings();
             timerService = new TimerServiceImpl();
+            dndService = new DndServiceImpl(timerService, configurationService);
             breakOverlayViewModel = new BreakOverlayViewModel();
             final com.eyeguard.service.OverlayService overlayService = new com.eyeguard.service.OverlayServiceImpl(breakOverlayViewModel);
             breakService = new BreakServiceImpl(timerService, overlayService, breakOverlayViewModel, configurationService);
@@ -72,9 +76,9 @@ public class EyeGuardApp extends Application {
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
             final Parent root = loader.load();
 
-            final MainWindowViewModel viewModel = new MainWindowViewModel(timerService);
+            mainViewModel = new MainWindowViewModel(timerService, dndService);
             final MainWindowController controller = loader.getController();
-            controller.setViewModel(viewModel);
+            controller.setViewModel(mainViewModel);
 
             final Scene scene = new Scene(root);
             setupStage(primaryStage, scene);
@@ -130,18 +134,20 @@ public class EyeGuardApp extends Application {
         dashboardViewModel = new DashboardViewModel();
         dashboardService = new DashboardServiceImpl(dashboardViewModel);
 
-        final TrayViewModel trayViewModel = new TrayViewModel(timerService);
+        final TrayViewModel trayViewModel = new TrayViewModel(timerService, dndService);
         trayService = new TrayServiceImpl(
             stage::show,
             dashboardService::showDashboard,
-            breakService::snoozeBreak,
-            () -> {
-                trayViewModel.togglePause();
-                trayService.updatePauseMenuItem(trayViewModel.getPauseMenuItemText());
-            },
+            () -> dndService.snooze(5),
+            () -> dndService.snooze(10),
+            () -> dndService.enableMeetingMode(30),
+            () -> dndService.enableMeetingMode(60),
+            () -> mainViewModel.handlePause(),
             this::openSettingsWindow,
             Platform::exit
         );
+        trayViewModel.pauseMenuItemTextProperty().addListener((obs, old, newVal) ->
+            trayService.updatePauseMenuItem(newVal));
         trayService.initializeTray();
 
         Platform.setImplicitExit(false);
@@ -170,6 +176,9 @@ public class EyeGuardApp extends Application {
         }
         if (breakService != null) {
             breakService.shutdown();
+        }
+        if (dndService != null) {
+            dndService.shutdown();
         }
         if (trayService != null) {
             trayService.dispose();
