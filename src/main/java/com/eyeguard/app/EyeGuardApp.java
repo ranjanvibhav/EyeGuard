@@ -37,6 +37,7 @@ import com.eyeguard.service.PreWarningService;
 import com.eyeguard.service.PreWarningServiceImpl;
 import com.eyeguard.service.StartupService;
 import com.eyeguard.service.StartupServiceFactory;
+import com.eyeguard.util.IconLoader;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -88,64 +89,77 @@ public class EyeGuardApp extends Application {
         try {
             LOGGER.info("EyeGuard application starting...");
             this.primaryStage = primaryStage;
-
             loadApplicationSettings();
-            timerService = new TimerServiceImpl();
-            dndService = new DndServiceImpl(timerService, configurationService);
-            breakOverlayViewModel = new BreakOverlayViewModel();
-            final com.eyeguard.service.OverlayService overlayService = new com.eyeguard.service.OverlayServiceImpl(breakOverlayViewModel);
-            breakService = new BreakServiceImpl(timerService, overlayService, breakOverlayViewModel, configurationService);
-
-            final SystemIdleProvider idleProvider = IdleProviderFactory.create();
-            idleDetectionService = new IdleDetectionServiceImpl(idleProvider);
-            if (currentSettings.isIdleDetectionEnabled()) {
-                idleDetectionService.setOnIdleDetected(() -> {
-                    LOGGER.info("Idle detected — pausing reminders");
-                    if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
-                        timerService.pause();
-                    }
-                });
-                idleDetectionService.setOnActivityResumed(() -> {
-                    LOGGER.info("Activity resumed — restarting reminders");
-                    if (timerService.getTimerState() == com.eyeguard.model.TimerState.PAUSED
-                            && dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
-                        timerService.resume();
-                    }
-                });
-                idleDetectionService.start();
-                LOGGER.info("Idle detection enabled");
-            } else {
-                LOGGER.info("Idle detection disabled in settings");
-            }
-
+            initCoreServices();
             setupFullscreenDetection();
-
             setupWorkingHours();
-
             initializeTimer();
-
-            final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
-            final Parent root = loader.load();
-
-            mainViewModel = new MainWindowViewModel(timerService, dndService, fullscreenDetectionService);
-            final MainWindowController controller = loader.getController();
-            controller.setViewModel(mainViewModel);
-            controller.setConfigurationService(configurationService);
-            controller.setApplySettingsCallback(() -> Platform.runLater(() -> {
-                loadApplicationSettings();
-                applySettings(currentSettings);
-            }));
-
-            final Scene scene = new Scene(root);
-            setupStage(primaryStage, scene);
-            setupTray(primaryStage);
-            primaryStage.show();
-
+            loadAndShowUI(primaryStage);
             LOGGER.info("Main window loaded successfully");
-        } catch (final IOException exception) {
-            LOGGER.error("Failed to load FXML layout from " + FXML_PATH, exception);
+        } catch (final Exception exception) {
+            LOGGER.error("Failed to initialize EyeGuard", exception);
             throw new EyeGuardException("Failed to initialize EyeGuard user interface", exception);
         }
+    }
+
+    private void initCoreServices() {
+        timerService = new TimerServiceImpl();
+        dndService = new DndServiceImpl(timerService, configurationService);
+        breakOverlayViewModel = new BreakOverlayViewModel();
+        final com.eyeguard.service.OverlayService overlayService =
+                new com.eyeguard.service.OverlayServiceImpl(breakOverlayViewModel);
+        breakService = new BreakServiceImpl(timerService, overlayService,
+                breakOverlayViewModel, configurationService);
+        final SystemIdleProvider idleProvider = IdleProviderFactory.create();
+        idleDetectionService = new IdleDetectionServiceImpl(idleProvider);
+        initIdleDetection();
+    }
+
+    private void initIdleDetection() {
+        if (currentSettings.isIdleDetectionEnabled()) {
+            idleDetectionService.setOnIdleDetected(this::handleIdleDetected);
+            idleDetectionService.setOnActivityResumed(this::handleActivityResumed);
+            idleDetectionService.start();
+            LOGGER.info("Idle detection enabled");
+        } else {
+            LOGGER.info("Idle detection disabled in settings");
+        }
+    }
+
+    private void handleIdleDetected() {
+        LOGGER.info("Idle detected — pausing reminders");
+        if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+            timerService.pause();
+        }
+    }
+
+    private void handleActivityResumed() {
+        LOGGER.info("Activity resumed — restarting reminders");
+        if (timerService.getTimerState() == com.eyeguard.model.TimerState.PAUSED
+                && dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+            timerService.resume();
+        }
+    }
+
+    private void loadAndShowUI(final Stage stage) throws IOException {
+        final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
+        final Parent root = loader.load();
+        mainViewModel = new MainWindowViewModel(timerService, dndService, fullscreenDetectionService);
+        final MainWindowController controller = loader.getController();
+        controller.setViewModel(mainViewModel);
+        controller.setConfigurationService(configurationService);
+        controller.setApplySettingsCallback(() -> Platform.runLater(() -> {
+            loadApplicationSettings();
+            applySettings(currentSettings);
+        }));
+        final Scene scene = new Scene(root);
+        setupStage(stage, scene);
+        setupTray(stage);
+        final javafx.scene.image.Image icon = IconLoader.loadJavaFXImage(64, 64);
+        if (icon != null) {
+            stage.getIcons().add(icon);
+        }
+        stage.show();
     }
 
     private void loadApplicationSettings() {
@@ -264,6 +278,10 @@ public class EyeGuardApp extends Application {
         stage.setScene(new Scene(root));
         stage.setTitle("EyeGuard — Settings");
         stage.setResizable(false);
+        final javafx.scene.image.Image icon = IconLoader.loadJavaFXImage(64, 64);
+        if (icon != null) {
+            stage.getIcons().add(icon);
+        }
         stage.showAndWait();
     }
 

@@ -3,6 +3,7 @@ package com.eyeguard.service;
 import com.eyeguard.exception.EyeGuardException;
 import com.eyeguard.view.BreakOverlayController;
 import com.eyeguard.viewmodel.BreakOverlayViewModel;
+import com.eyeguard.util.IconLoader;
 import java.io.IOException;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -44,30 +45,33 @@ public class OverlayServiceImpl implements OverlayService {
             LOGGER.error("showOverlay must be called on the JavaFX Application Thread");
             return;
         }
-
         try {
             LOGGER.debug("Loading break overlay UI...");
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
             final Parent root = loader.load();
-
             final BreakOverlayController controller = loader.getController();
             controller.setViewModel(viewModel);
-
-            overlayStage = new Stage(StageStyle.TRANSPARENT);
-            final Scene scene = new Scene(root);
-            scene.setFill(Color.TRANSPARENT);
-
-            overlayStage.setScene(scene);
-            overlayStage.setAlwaysOnTop(true);
-            overlayStage.setFullScreen(true);
-            overlayStage.show();
-            overlayStage.toFront();
-
+            configureOverlayStage(root);
             LOGGER.info("Break overlay shown");
         } catch (final IOException exception) {
             LOGGER.error("Failed to load break overlay FXML layout from " + FXML_PATH, exception);
             throw new EyeGuardException("Failed to load break overlay user interface", exception);
         }
+    }
+
+    private void configureOverlayStage(final Parent root) {
+        overlayStage = new Stage(StageStyle.TRANSPARENT);
+        final Scene scene = new Scene(root);
+        scene.setFill(Color.TRANSPARENT);
+        overlayStage.setScene(scene);
+        overlayStage.setAlwaysOnTop(true);
+        overlayStage.setFullScreen(true);
+        final javafx.scene.image.Image icon = IconLoader.loadJavaFXImage(64, 64);
+        if (icon != null) {
+            overlayStage.getIcons().add(icon);
+        }
+        overlayStage.show();
+        overlayStage.toFront();
     }
 
     /**

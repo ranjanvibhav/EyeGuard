@@ -3,6 +3,7 @@ package com.eyeguard.service;
 import com.eyeguard.exception.EyeGuardException;
 import com.eyeguard.view.DashboardController;
 import com.eyeguard.viewmodel.DashboardViewModel;
+import com.eyeguard.util.IconLoader;
 import java.io.IOException;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -66,19 +67,24 @@ public class DashboardServiceImpl implements DashboardService {
         final Parent root = loader.load();
         final DashboardController controller = loader.getController();
         controller.setViewModel(viewModel);
+        configureDashboardStage(root, controller);
+        dashboardStage.show();
+        LOGGER.info("Dashboard shown");
+    }
 
+    private void configureDashboardStage(final Parent root, final DashboardController controller) {
         dashboardStage = new Stage(StageStyle.TRANSPARENT);
         final Scene scene = new Scene(root);
         scene.setFill(Color.TRANSPARENT);
-
         dashboardStage.setScene(scene);
         dashboardStage.setAlwaysOnTop(true);
         dashboardStage.setResizable(false);
+        final javafx.scene.image.Image icon = IconLoader.loadJavaFXImage(64, 64);
+        if (icon != null) {
+            dashboardStage.getIcons().add(icon);
+        }
         positionStage(dashboardStage);
-
         controller.setStage(dashboardStage);
-        dashboardStage.show();
-        LOGGER.info("Dashboard shown");
     }
 
     private void positionStage(final Stage stage) {

@@ -41,6 +41,25 @@ public final class TrayIconFactory {
      * @return the generated BufferedImage containing the tray icon
      */
     public static BufferedImage createTrayIconImage(final int size, final Color fillColor) {
+        final java.awt.Image loaded = IconLoader.loadAwtImage(size);
+        if (loaded != null) {
+            return convertToBufferedImage(loaded, size);
+        }
+        return drawProgrammaticIcon(size, fillColor);
+    }
+
+    private static BufferedImage convertToBufferedImage(final java.awt.Image image, final int size) {
+        final BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D g2d = img.createGraphics();
+        try {
+            g2d.drawImage(image, 0, 0, null);
+        } finally {
+            g2d.dispose();
+        }
+        return img;
+    }
+
+    private static BufferedImage drawProgrammaticIcon(final int size, final Color fillColor) {
         final BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
         final Graphics2D g2d = img.createGraphics();
         try {
