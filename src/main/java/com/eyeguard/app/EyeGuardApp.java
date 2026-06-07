@@ -7,6 +7,8 @@ import com.eyeguard.service.ConfigurationService;
 import com.eyeguard.service.ConfigurationServiceImpl;
 import com.eyeguard.service.DashboardService;
 import com.eyeguard.service.DashboardServiceImpl;
+import com.eyeguard.service.TimerService;
+import com.eyeguard.service.TimerServiceImpl;
 import com.eyeguard.service.TrayService;
 import com.eyeguard.service.TrayServiceImpl;
 import com.eyeguard.view.MainWindowController;
@@ -42,6 +44,7 @@ public class EyeGuardApp extends Application {
     private DashboardService dashboardService;
     private ConfigurationService configurationService;
     private Settings currentSettings;
+    private TimerService timerService;
 
     /**
      * Starts the JavaFX application by initializing the primary stage and loading the UI.
@@ -55,11 +58,12 @@ public class EyeGuardApp extends Application {
             this.primaryStage = primaryStage;
 
             loadApplicationSettings();
+            initializeTimer();
 
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
             final Parent root = loader.load();
 
-            final MainWindowViewModel viewModel = new MainWindowViewModel();
+            final MainWindowViewModel viewModel = new MainWindowViewModel(timerService);
             final MainWindowController controller = loader.getController();
             controller.setViewModel(viewModel);
 
@@ -86,6 +90,14 @@ public class EyeGuardApp extends Application {
         }
     }
 
+    private void initializeTimer() {
+        timerService = new TimerServiceImpl();
+        final int totalSeconds = currentSettings.getReminderIntervalMinutes() * 60;
+        timerService.setOnBreakDue(() -> LOGGER.info("Break is due!"));
+        timerService.start(totalSeconds);
+        LOGGER.info("Timer started with interval: {}min", currentSettings.getReminderIntervalMinutes());
+    }
+
     /**
      * Configures the visual properties of the stage.
      *
@@ -110,7 +122,7 @@ public class EyeGuardApp extends Application {
         dashboardViewModel = new DashboardViewModel();
         dashboardService = new DashboardServiceImpl(dashboardViewModel);
 
-        final TrayViewModel trayViewModel = new TrayViewModel();
+        final TrayViewModel trayViewModel = new TrayViewModel(timerService);
         trayService = new TrayServiceImpl(
             stage::show,
             dashboardService::showDashboard,
@@ -145,6 +157,9 @@ public class EyeGuardApp extends Application {
      */
     @Override
     public void stop() {
+        if (timerService != null) {
+            timerService.stop();
+        }
         if (trayService != null) {
             trayService.dispose();
         }

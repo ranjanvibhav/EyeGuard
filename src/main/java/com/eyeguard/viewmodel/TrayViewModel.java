@@ -1,5 +1,6 @@
 package com.eyeguard.viewmodel;
 
+import com.eyeguard.service.TimerService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -33,6 +34,19 @@ public class TrayViewModel {
      */
     public TrayViewModel() {
         LOGGER.debug("TrayViewModel initialized with default placeholder values");
+    }
+
+    /**
+     * Constructs the TrayViewModel bound to the TimerService countdown ticks.
+     *
+     * @param timerService the core countdown timer service
+     */
+    public TrayViewModel(final TimerService timerService) {
+        timerService.countdownTextProperty().addListener((obs, oldVal, newVal) -> {
+            final String tooltip = "EyeGuard — Next break in: " + newVal;
+            tooltipText.set(tooltip);
+            statusMenuItemText.set("Next break in: " + newVal);
+        });
     }
 
     /**

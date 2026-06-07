@@ -1,5 +1,7 @@
 package com.eyeguard.viewmodel;
 
+import com.eyeguard.model.TimerState;
+import com.eyeguard.service.TimerService;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -44,6 +46,45 @@ public class MainWindowViewModel {
      */
     public MainWindowViewModel() {
         LOGGER.debug("MainWindowViewModel initialized with default placeholder values");
+    }
+
+    /**
+     * Constructs the MainWindowViewModel bound to the TimerService properties.
+     *
+     * @param timerService the core countdown timer service
+     */
+    public MainWindowViewModel(final TimerService timerService) {
+        nextBreakCountdown.bind(timerService.countdownTextProperty());
+        timerProgress.bind(timerService.progressProperty());
+        timerService.timerStateProperty().addListener((obs, oldState, newState) -> {
+            updateStatusFromState(newState);
+        });
+        updateStatusFromState(timerService.getTimerState());
+    }
+
+    private void updateStatusFromState(final TimerState state) {
+        switch (state) {
+            case RUNNING -> {
+                statusText.set("ACTIVE");
+                statusStyle.set("status-badge-active");
+            }
+            case PAUSED -> {
+                statusText.set("PAUSED");
+                statusStyle.set("status-badge-paused");
+            }
+            case BREAK_DUE -> {
+                statusText.set("BREAK!");
+                statusStyle.set("status-badge-warning");
+            }
+            case STOPPED -> {
+                statusText.set("STOPPED");
+                statusStyle.set("status-badge-stopped");
+            }
+            case IDLE -> {
+                statusText.set("IDLE");
+                statusStyle.set("status-badge-stopped");
+            }
+        }
     }
 
     /**
