@@ -1,6 +1,10 @@
 package com.eyeguard.app;
 
 import com.eyeguard.exception.EyeGuardException;
+import com.eyeguard.exception.SettingsLoadException;
+import com.eyeguard.model.Settings;
+import com.eyeguard.service.ConfigurationService;
+import com.eyeguard.service.ConfigurationServiceImpl;
 import com.eyeguard.service.DashboardService;
 import com.eyeguard.service.DashboardServiceImpl;
 import com.eyeguard.service.TrayService;
@@ -36,6 +40,8 @@ public class EyeGuardApp extends Application {
     private TrayService trayService;
     private DashboardViewModel dashboardViewModel;
     private DashboardService dashboardService;
+    private ConfigurationService configurationService;
+    private Settings currentSettings;
 
     /**
      * Starts the JavaFX application by initializing the primary stage and loading the UI.
@@ -47,6 +53,8 @@ public class EyeGuardApp extends Application {
         try {
             LOGGER.info("EyeGuard application starting...");
             this.primaryStage = primaryStage;
+
+            loadApplicationSettings();
 
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
             final Parent root = loader.load();
@@ -64,6 +72,17 @@ public class EyeGuardApp extends Application {
         } catch (final IOException exception) {
             LOGGER.error("Failed to load FXML layout from " + FXML_PATH, exception);
             throw new EyeGuardException("Failed to initialize EyeGuard user interface", exception);
+        }
+    }
+
+    private void loadApplicationSettings() {
+        configurationService = ConfigurationServiceImpl.createDefault();
+        try {
+            currentSettings = configurationService.loadSettings();
+            LOGGER.info("Settings loaded: {}", currentSettings);
+        } catch (final SettingsLoadException e) {
+            LOGGER.error("Failed to load settings, using defaults", e);
+            currentSettings = configurationService.getDefaultSettings();
         }
     }
 

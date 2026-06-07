@@ -12,4 +12,6 @@ module com.eyeguard {
 
     opens com.eyeguard.app to javafx.graphics;
     opens com.eyeguard.view to javafx.fxml;
+    exports com.eyeguard.model;
+    opens com.eyeguard.model to com.fasterxml.jackson.databind;
 }
