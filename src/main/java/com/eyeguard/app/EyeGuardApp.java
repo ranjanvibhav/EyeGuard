@@ -12,6 +12,8 @@ import com.eyeguard.service.TimerServiceImpl;
 import com.eyeguard.service.TrayService;
 import com.eyeguard.service.TrayServiceImpl;
 import com.eyeguard.view.MainWindowController;
+import com.eyeguard.view.SettingsWindowController;
+import com.eyeguard.viewmodel.SettingsWindowViewModel;
 import com.eyeguard.service.DndServiceImpl;
 import com.eyeguard.service.IdleDetectionService;
 import com.eyeguard.service.IdleDetectionServiceImpl;
@@ -27,6 +29,8 @@ import com.eyeguard.service.FullscreenDetectionService;
 import com.eyeguard.service.FullscreenDetectionServiceImpl;
 import com.eyeguard.service.SystemFullscreenProvider;
 import com.eyeguard.service.FullscreenProviderFactory;
+import com.eyeguard.service.WorkingHoursService;
+import com.eyeguard.service.WorkingHoursServiceImpl;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -63,6 +67,7 @@ public class EyeGuardApp extends Application {
     private MainWindowViewModel mainViewModel;
     private IdleDetectionService idleDetectionService;
     private FullscreenDetectionService fullscreenDetectionService;
+    private WorkingHoursService workingHoursService;
 
     /**
      * Starts the JavaFX application by initializing the primary stage and loading the UI.
@@ -106,6 +111,8 @@ public class EyeGuardApp extends Application {
 
             setupFullscreenDetection();
 
+            setupWorkingHours();
+
             initializeTimer();
 
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
@@ -114,6 +121,11 @@ public class EyeGuardApp extends Application {
             mainViewModel = new MainWindowViewModel(timerService, dndService, fullscreenDetectionService);
             final MainWindowController controller = loader.getController();
             controller.setViewModel(mainViewModel);
+            controller.setConfigurationService(configurationService);
+            controller.setApplySettingsCallback(() -> Platform.runLater(() -> {
+                loadApplicationSettings();
+                applySettings(currentSettings);
+            }));
 
             final Scene scene = new Scene(root);
             setupStage(primaryStage, scene);
@@ -169,7 +181,7 @@ public class EyeGuardApp extends Application {
         dashboardViewModel = new DashboardViewModel(idleDetectionService);
         dashboardService = new DashboardServiceImpl(dashboardViewModel);
 
-        final TrayViewModel trayViewModel = new TrayViewModel(timerService, dndService);
+        final TrayViewModel trayViewModel = new TrayViewModel(timerService, dndService, workingHoursService);
         trayService = new TrayServiceImpl(
             stage::show,
             dashboardService::showDashboard,
@@ -198,7 +210,29 @@ public class EyeGuardApp extends Application {
      * Placeholder method to trigger the settings window from the tray menu.
      */
     private void openSettingsWindow() {
-        LOGGER.info("Opening settings from tray");
+        try {
+            final FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/settings-window.fxml"));
+            final Parent root = loader.load();
+            final SettingsWindowController controller = loader.getController();
+            controller.setViewModel(new SettingsWindowViewModel());
+            controller.setConfigurationService(configurationService);
+            controller.setApplySettingsCallback(() -> Platform.runLater(() -> {
+                loadApplicationSettings();
+                applySettings(currentSettings);
+            }));
+            showSettingsStage(root);
+        } catch (final IOException e) {
+            LOGGER.error("Failed to open settings window", e);
+        }
+    }
+
+    private void showSettingsStage(final Parent root) {
+        final Stage stage = new Stage();
+        stage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+        stage.setScene(new Scene(root));
+        stage.setTitle("EyeGuard — Settings");
+        stage.setResizable(false);
+        stage.showAndWait();
     }
 
     private void setupFullscreenDetection() {
@@ -230,6 +264,34 @@ public class EyeGuardApp extends Application {
         }
     }
 
+    private void setupWorkingHours() {
+        workingHoursService = new WorkingHoursServiceImpl(configurationService);
+        if (currentSettings.isWorkingHoursEnabled()) {
+            workingHoursService.setOnWorkingHoursStarted(this::handleWorkingHoursStarted);
+            workingHoursService.setOnWorkingHoursEnded(this::handleWorkingHoursEnded);
+            workingHoursService.start();
+            if (!workingHoursService.isWithinWorkingHours()) {
+                timerService.pause();
+                LOGGER.info("App started outside working hours — timer paused");
+            }
+        }
+    }
+
+    private void handleWorkingHoursStarted() {
+        LOGGER.info("Working hours started");
+        if (timerService.getTimerState() == com.eyeguard.model.TimerState.PAUSED
+                && dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+            timerService.resume();
+        }
+    }
+
+    private void handleWorkingHoursEnded() {
+        LOGGER.info("Working hours ended");
+        if (timerService.getTimerState() == com.eyeguard.model.TimerState.RUNNING) {
+            timerService.pause();
+        }
+    }
+
     private void applySettings(final Settings settings) {
         if (settings.isIdleDetectionEnabled()) {
             idleDetectionService.start();
@@ -241,6 +303,7 @@ public class EyeGuardApp extends Application {
         } else {
             fullscreenDetectionService.stop();
         }
+        workingHoursService.reloadSettings();
         timerService.reset(settings.getReminderIntervalMinutes() * 60);
         LOGGER.info("Settings applied: {}", settings);
     }
@@ -250,15 +313,7 @@ public class EyeGuardApp extends Application {
      */
     @Override
     public void stop() {
-        if (fullscreenDetectionService != null) {
-            fullscreenDetectionService.stop();
-        }
-        if (idleDetectionService != null) {
-            idleDetectionService.stop();
-        }
-        if (timerService != null) {
-            timerService.stop();
-        }
+        stopServices();
         if (breakService != null) {
             breakService.shutdown();
         }
@@ -269,5 +324,20 @@ public class EyeGuardApp extends Application {
             trayService.dispose();
         }
         LOGGER.info("EyeGuard application stopped");
+    }
+
+    private void stopServices() {
+        if (workingHoursService != null) {
+            workingHoursService.stop();
+        }
+        if (fullscreenDetectionService != null) {
+            fullscreenDetectionService.stop();
+        }
+        if (idleDetectionService != null) {
+            idleDetectionService.stop();
+        }
+        if (timerService != null) {
+            timerService.stop();
+        }
     }
 }

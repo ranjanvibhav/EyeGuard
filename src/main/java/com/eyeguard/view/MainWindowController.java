@@ -3,6 +3,7 @@ package com.eyeguard.view;
 import com.eyeguard.exception.EyeGuardException;
 import com.eyeguard.viewmodel.MainWindowViewModel;
 import com.eyeguard.viewmodel.SettingsWindowViewModel;
+import com.eyeguard.service.ConfigurationService;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -59,6 +60,8 @@ public class MainWindowController implements Initializable {
     private Label streakLabel;
 
     private MainWindowViewModel viewModel;
+    private ConfigurationService configurationService;
+    private Runnable applySettingsCallback;
 
     /**
      * Initializes the controller class. This is called automatically by FXMLLoader.
@@ -150,6 +153,8 @@ public class MainWindowController implements Initializable {
             final SettingsWindowViewModel settingsViewModel = new SettingsWindowViewModel();
             final SettingsWindowController controller = loader.getController();
             controller.setViewModel(settingsViewModel);
+            controller.setConfigurationService(configurationService);
+            controller.setApplySettingsCallback(applySettingsCallback);
 
             configureAndShowSettings(root);
             LOGGER.info("Settings window opened");
@@ -157,6 +162,14 @@ public class MainWindowController implements Initializable {
             LOGGER.error("Failed to load settings window FXML", exception);
             throw new EyeGuardException("Failed to open settings window", exception);
         }
+    }
+
+    public void setConfigurationService(final ConfigurationService configurationService) {
+        this.configurationService = configurationService;
+    }
+
+    public void setApplySettingsCallback(final Runnable callback) {
+        this.applySettingsCallback = callback;
     }
 
     /**

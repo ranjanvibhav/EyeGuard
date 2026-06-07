@@ -2,6 +2,7 @@ package com.eyeguard.viewmodel;
 
 import com.eyeguard.service.TimerService;
 import com.eyeguard.service.DndService;
+import com.eyeguard.service.WorkingHoursService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -30,6 +31,7 @@ public class TrayViewModel {
     private final StringProperty pauseMenuItemText = new SimpleStringProperty(INITIAL_PAUSE_LABEL);
     private final StringProperty errorMessage = new SimpleStringProperty(INITIAL_ERROR);
     private DndService dndService;
+    private WorkingHoursService workingHoursService;
 
     /**
      * Constructs the TrayViewModel and logs initialization.
@@ -60,15 +62,36 @@ public class TrayViewModel {
     public TrayViewModel(final TimerService timerService, final DndService dndService) {
         this.dndService = dndService;
         timerService.countdownTextProperty().addListener((obs, oldVal, newVal) -> {
+            if (isOutsideHours()) return;
             if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
-                tooltipText.set("EyeGuard — Next break in: " + newVal);
-                statusMenuItemText.set("Next break in: " + newVal);
+                updateTooltipAndStatus("Next break in: " + newVal);
             }
         });
         dndService.dndStateProperty().addListener((obs, old, newState) -> updatePauseMenuText(newState));
         dndService.dndStatusTextProperty().addListener((obs, old, newVal) -> {
-            statusMenuItemText.set(newVal);
-            tooltipText.set("EyeGuard — " + newVal);
+            if (isOutsideHours()) return;
+            updateTooltipAndStatus(newVal);
+        });
+    }
+
+    /**
+     * Constructs the TrayViewModel bound to the TimerService, DndService, and WorkingHoursService.
+     *
+     * @param timerService        the core countdown timer service
+     * @param dndService          the DND state coordination service
+     * @param workingHoursService the working hours enforcement service
+     */
+    public TrayViewModel(final TimerService timerService,
+                         final DndService dndService,
+                         final WorkingHoursService workingHoursService) {
+        this(timerService, dndService);
+        this.workingHoursService = workingHoursService;
+        workingHoursService.withinWorkingHoursProperty().addListener((obs, old, isWithin) -> {
+            if (!isWithin) {
+                updateTooltipAndStatus("Outside working hours");
+            } else {
+                updateTooltipAndStatus("Next break in: " + timerService.countdownTextProperty().get());
+            }
         });
     }
 
@@ -192,5 +215,13 @@ public class TrayViewModel {
      */
     public String getErrorMessage() {
         return errorMessage.get();
+    }
+    private boolean isOutsideHours() {
+        return workingHoursService != null && !workingHoursService.isWithinWorkingHours();
+    }
+
+    private void updateTooltipAndStatus(final String status) {
+        statusMenuItemText.set(status);
+        tooltipText.set("EyeGuard — " + status);
     }
 }
