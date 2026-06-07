@@ -229,6 +229,24 @@ public class TrayServiceImpl implements TrayService {
         });
     }
 
+    @Override
+    public void setWarningMode(final boolean warning) {
+        runOnAwtThread(() -> {
+            if (trayIcon != null) {
+                if (warning) {
+                    final java.awt.Image orangeImage = TrayIconFactory.createTrayIconImage(TRAY_ICON_SIZE,
+                            new java.awt.Color(0xF4, 0xA2, 0x61, 255));
+                    trayIcon.setImage(orangeImage);
+                    LOGGER.debug("Tray icon set to warning mode");
+                } else {
+                    final java.awt.Image normalImage = TrayIconFactory.createTrayIconImage(TRAY_ICON_SIZE);
+                    trayIcon.setImage(normalImage);
+                    LOGGER.debug("Tray icon returned to normal");
+                }
+            }
+        });
+    }
+
     /**
      * Helpers to execute task on the AWT Event Dispatch Thread.
      *

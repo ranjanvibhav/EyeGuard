@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+
+<StackPane fx:id="toastRoot" stylesheets="@../css/toast-notification.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.eyeguard.view.ToastController">
+   <children>
+      <HBox styleClass="toast-container" spacing="12" alignment="CENTER_LEFT">
+         <children>
+            <StackPane minWidth="36.0" minHeight="36.0" prefWidth="36.0" prefHeight="36.0">
+               <children>
+                  <Circle radius="18.0" fill="#F4A261" />
+                  <Label text="👁" style="-fx-font-size: 16px;" />
+               </children>
+            </StackPane>
+            <VBox spacing="4" HBox.hgrow="ALWAYS">
+               <children>
+                  <Label text="Eye Break Soon" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #E8F4F8;" />
+                  <Label fx:id="toastMessageLabel" text="Eye break in 2 minutes — finish your thought" style="-fx-font-size: 12px; -fx-text-fill: #7A9BB5;" />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+   </children>
+</StackPane>

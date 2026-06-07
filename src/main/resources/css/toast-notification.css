@@ -1,0 +1,15 @@
+.root {
+    -fx-background-color: transparent;
+}
+
+.toast-container {
+    -fx-background-color: #243447; /* --color-surface-elevated */
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-color: #F4A261; /* --color-warning */
+    -fx-border-width: 1px;
+    -fx-padding: 16px;
+    -fx-min-width: 300px;
+    -fx-max-width: 340px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.5), 16, 0, 0, 4);
+}

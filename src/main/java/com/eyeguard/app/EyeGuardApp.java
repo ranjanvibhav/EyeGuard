@@ -31,6 +31,12 @@ import com.eyeguard.service.SystemFullscreenProvider;
 import com.eyeguard.service.FullscreenProviderFactory;
 import com.eyeguard.service.WorkingHoursService;
 import com.eyeguard.service.WorkingHoursServiceImpl;
+import com.eyeguard.service.ToastService;
+import com.eyeguard.service.ToastServiceImpl;
+import com.eyeguard.service.PreWarningService;
+import com.eyeguard.service.PreWarningServiceImpl;
+import com.eyeguard.service.StartupService;
+import com.eyeguard.service.StartupServiceFactory;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -68,6 +74,9 @@ public class EyeGuardApp extends Application {
     private IdleDetectionService idleDetectionService;
     private FullscreenDetectionService fullscreenDetectionService;
     private WorkingHoursService workingHoursService;
+    private ToastService toastService;
+    private PreWarningService preWarningService;
+    private StartupService startupService;
 
     /**
      * Starts the JavaFX application by initializing the primary stage and loading the UI.
@@ -180,8 +189,16 @@ public class EyeGuardApp extends Application {
     private void setupTray(final Stage stage) {
         dashboardViewModel = new DashboardViewModel(idleDetectionService);
         dashboardService = new DashboardServiceImpl(dashboardViewModel);
-
+        initTrayService(stage);
         final TrayViewModel trayViewModel = new TrayViewModel(timerService, dndService, workingHoursService);
+        trayViewModel.pauseMenuItemTextProperty().addListener((obs, old, newVal) ->
+            trayService.updatePauseMenuItem(newVal));
+        trayService.initializeTray();
+        initWarningAndStartup();
+        configureStageClose(stage, trayViewModel);
+    }
+
+    private void initTrayService(final Stage stage) {
         trayService = new TrayServiceImpl(
             stage::show,
             dashboardService::showDashboard,
@@ -193,10 +210,17 @@ public class EyeGuardApp extends Application {
             this::openSettingsWindow,
             Platform::exit
         );
-        trayViewModel.pauseMenuItemTextProperty().addListener((obs, old, newVal) ->
-            trayService.updatePauseMenuItem(newVal));
-        trayService.initializeTray();
+    }
 
+    private void initWarningAndStartup() {
+        toastService = new ToastServiceImpl();
+        preWarningService = new PreWarningServiceImpl(toastService, trayService);
+        preWarningService.attach(timerService);
+        startupService = StartupServiceFactory.create();
+        applyStartupSetting(currentSettings.isLaunchAtStartupEnabled());
+    }
+
+    private void configureStageClose(final Stage stage, final TrayViewModel trayViewModel) {
         Platform.setImplicitExit(false);
         stage.setOnCloseRequest(e -> {
             e.consume();
@@ -204,6 +228,14 @@ public class EyeGuardApp extends Application {
             trayService.updateTooltip(trayViewModel.getTooltipText());
             LOGGER.info("Main window hidden, app running in tray");
         });
+    }
+
+    private void applyStartupSetting(final boolean enabled) {
+        if (enabled) {
+            startupService.register();
+        } else {
+            startupService.unregister();
+        }
     }
 
     /**
@@ -304,6 +336,7 @@ public class EyeGuardApp extends Application {
             fullscreenDetectionService.stop();
         }
         workingHoursService.reloadSettings();
+        applyStartupSetting(settings.isLaunchAtStartupEnabled());
         timerService.reset(settings.getReminderIntervalMinutes() * 60);
         LOGGER.info("Settings applied: {}", settings);
     }
@@ -314,6 +347,9 @@ public class EyeGuardApp extends Application {
     @Override
     public void stop() {
         stopServices();
+        if (preWarningService != null) {
+            preWarningService.detach();
+        }
         if (breakService != null) {
             breakService.shutdown();
         }

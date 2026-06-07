@@ -30,38 +30,38 @@ public final class TrayIconFactory {
      * @return the generated BufferedImage containing the tray icon
      */
     public static BufferedImage createTrayIconImage(final int size) {
-        final BufferedImage image = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-        final Graphics2D g2d = image.createGraphics();
+        return createTrayIconImage(size, Color.decode(ICON_COLOR_HEX));
+    }
 
+    /**
+     * Creates a buffered image of the specified size with a custom circle fill color.
+     *
+     * @param size      width and height of the square image
+     * @param fillColor fill color for the inner circle
+     * @return the generated BufferedImage containing the tray icon
+     */
+    public static BufferedImage createTrayIconImage(final int size, final Color fillColor) {
+        final BufferedImage img = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
+        final Graphics2D g2d = img.createGraphics();
         try {
-            // Enable antialiasing for high-quality rendering
             g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-            // Clear background
-            g2d.setComposite(AlphaComposite.Clear);
-            g2d.fillRect(0, 0, size, size);
-            g2d.setComposite(AlphaComposite.SrcOver);
-
-            // Draw filled circle
-            g2d.setColor(Color.decode(ICON_COLOR_HEX));
-            final int diameter = size - (CIRCLE_OFFSET * 2);
-            g2d.fillOval(CIRCLE_OFFSET, CIRCLE_OFFSET, diameter, diameter);
-
-            // Draw bold white letter "E" centered
-            g2d.setColor(Color.WHITE);
-            final int fontSize = (int) (size * FONT_SIZE_FACTOR);
-            g2d.setFont(new Font(Font.SANS_SERIF, Font.BOLD, fontSize));
-
-            // Calculate centering coordinates using font metrics
-            final FontMetrics metrics = g2d.getFontMetrics();
-            final int x = (size - metrics.stringWidth(ICON_LETTER)) / 2;
-            final int y = ((size - metrics.getHeight()) / 2) + metrics.getAscent();
-            g2d.drawString(ICON_LETTER, x, y);
+            g2d.setColor(fillColor);
+            final int d = size - (CIRCLE_OFFSET * 2);
+            g2d.fillOval(CIRCLE_OFFSET, CIRCLE_OFFSET, d, d);
+            drawTextCentered(g2d, size);
         } finally {
             g2d.dispose();
         }
+        return img;
+    }
 
-        return image;
+    private static void drawTextCentered(final Graphics2D g2d, final int size) {
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font(Font.SANS_SERIF, Font.BOLD, (int) (size * FONT_SIZE_FACTOR)));
+        final FontMetrics metrics = g2d.getFontMetrics();
+        final int x = (size - metrics.stringWidth(ICON_LETTER)) / 2;
+        final int y = ((size - metrics.getHeight()) / 2) + metrics.getAscent();
+        g2d.drawString(ICON_LETTER, x, y);
     }
 }
