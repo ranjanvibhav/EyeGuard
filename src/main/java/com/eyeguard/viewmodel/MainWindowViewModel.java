@@ -3,6 +3,7 @@ package com.eyeguard.viewmodel;
 import com.eyeguard.model.TimerState;
 import com.eyeguard.service.TimerService;
 import com.eyeguard.service.DndService;
+import com.eyeguard.service.FullscreenDetectionService;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -43,6 +44,7 @@ public class MainWindowViewModel {
     private final StringProperty errorMessage = new SimpleStringProperty(INITIAL_ERROR);
     private TimerService timerService;
     private DndService dndService;
+    private FullscreenDetectionService fullscreenDetectionService;
 
     /**
      * Constructs the MainWindowViewModel and logs initialization.
@@ -78,6 +80,28 @@ public class MainWindowViewModel {
         dndService.dndStatusTextProperty().addListener((obs, old, newVal) -> {
             updateStatusFromDnd(newVal);
         });
+    }
+
+    /**
+     * Constructs the MainWindowViewModel bound to the TimerService, DndService, and FullscreenDetectionService.
+     *
+     * @param timerService               the core timer service
+     * @param dndService                 the DND state service
+     * @param fullscreenDetectionService the fullscreen detection service
+     */
+    public MainWindowViewModel(final TimerService timerService,
+                               final DndService dndService,
+                               final FullscreenDetectionService fullscreenDetectionService) {
+        this(timerService, dndService);
+        this.fullscreenDetectionService = fullscreenDetectionService;
+        fullscreenDetectionService.isFullscreenActiveProperty()
+            .addListener((obs, old, isFullscreen) -> {
+                if (isFullscreen) {
+                    setStatus("FULLSCREEN", "status-badge-paused");
+                } else {
+                    updateStatusFromState(timerService.getTimerState());
+                }
+            });
     }
 
     /**
@@ -117,38 +141,30 @@ public class MainWindowViewModel {
         LOGGER.info("Meeting mode requested for " + minutes + " minutes");
     }
 
+    private void setStatus(final String text, final String style) {
+        statusText.set(text);
+        statusStyle.set(style);
+    }
+
     private void updateStatusFromDnd(final String newVal) {
         final com.eyeguard.model.DndState state = dndService.getDndState();
         if (state == com.eyeguard.model.DndState.INACTIVE) {
             updateStatusFromState(timerService.getTimerState());
         } else {
-            statusText.set(state.name());
-            statusStyle.set("status-badge-paused");
+            setStatus(state.name(), "status-badge-paused");
         }
     }
 
     private void updateStatusFromState(final TimerState state) {
+        if (fullscreenDetectionService != null && fullscreenDetectionService.isFullscreenActive()) {
+            setStatus("FULLSCREEN", "status-badge-paused");
+            return;
+        }
         switch (state) {
-            case RUNNING -> {
-                statusText.set("ACTIVE");
-                statusStyle.set("status-badge-active");
-            }
-            case PAUSED -> {
-                statusText.set("PAUSED");
-                statusStyle.set("status-badge-paused");
-            }
-            case BREAK_DUE -> {
-                statusText.set("BREAK!");
-                statusStyle.set("status-badge-warning");
-            }
-            case STOPPED -> {
-                statusText.set("STOPPED");
-                statusStyle.set("status-badge-stopped");
-            }
-            case IDLE -> {
-                statusText.set("IDLE");
-                statusStyle.set("status-badge-stopped");
-            }
+            case RUNNING -> setStatus("ACTIVE", "status-badge-active");
+            case PAUSED -> setStatus("PAUSED", "status-badge-paused");
+            case BREAK_DUE -> setStatus("BREAK!", "status-badge-warning");
+            case STOPPED, IDLE -> setStatus(state.name(), "status-badge-stopped");
         }
     }
 

@@ -23,6 +23,10 @@ import com.eyeguard.service.BreakServiceImpl;
 import com.eyeguard.service.OverlayServiceImpl;
 import com.eyeguard.viewmodel.BreakOverlayViewModel;
 import com.eyeguard.viewmodel.TrayViewModel;
+import com.eyeguard.service.FullscreenDetectionService;
+import com.eyeguard.service.FullscreenDetectionServiceImpl;
+import com.eyeguard.service.SystemFullscreenProvider;
+import com.eyeguard.service.FullscreenProviderFactory;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -58,6 +62,7 @@ public class EyeGuardApp extends Application {
     private DndServiceImpl dndService;
     private MainWindowViewModel mainViewModel;
     private IdleDetectionService idleDetectionService;
+    private FullscreenDetectionService fullscreenDetectionService;
 
     /**
      * Starts the JavaFX application by initializing the primary stage and loading the UI.
@@ -99,12 +104,14 @@ public class EyeGuardApp extends Application {
                 LOGGER.info("Idle detection disabled in settings");
             }
 
+            setupFullscreenDetection();
+
             initializeTimer();
 
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
             final Parent root = loader.load();
 
-            mainViewModel = new MainWindowViewModel(timerService, dndService);
+            mainViewModel = new MainWindowViewModel(timerService, dndService, fullscreenDetectionService);
             final MainWindowController controller = loader.getController();
             controller.setViewModel(mainViewModel);
 
@@ -194,11 +201,58 @@ public class EyeGuardApp extends Application {
         LOGGER.info("Opening settings from tray");
     }
 
+    private void setupFullscreenDetection() {
+        final SystemFullscreenProvider provider = FullscreenProviderFactory.create();
+        fullscreenDetectionService = new FullscreenDetectionServiceImpl(provider);
+        if (currentSettings.isFullscreenPauseEnabled()) {
+            fullscreenDetectionService.setOnFullscreenEntered(this::handleFullscreenEntered);
+            fullscreenDetectionService.setOnFullscreenExited(this::handleFullscreenExited);
+            fullscreenDetectionService.start();
+            LOGGER.info("Fullscreen detection enabled");
+        } else {
+            LOGGER.info("Fullscreen detection disabled in settings");
+        }
+    }
+
+    private void handleFullscreenEntered() {
+        LOGGER.info("Fullscreen entered — pausing timer");
+        if (timerService.getTimerState() == com.eyeguard.model.TimerState.RUNNING
+                && dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+            timerService.pause();
+        }
+    }
+
+    private void handleFullscreenExited() {
+        LOGGER.info("Fullscreen exited — resuming timer");
+        if (timerService.getTimerState() == com.eyeguard.model.TimerState.PAUSED
+                && dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+            timerService.resume();
+        }
+    }
+
+    private void applySettings(final Settings settings) {
+        if (settings.isIdleDetectionEnabled()) {
+            idleDetectionService.start();
+        } else {
+            idleDetectionService.stop();
+        }
+        if (settings.isFullscreenPauseEnabled()) {
+            fullscreenDetectionService.start();
+        } else {
+            fullscreenDetectionService.stop();
+        }
+        timerService.reset(settings.getReminderIntervalMinutes() * 60);
+        LOGGER.info("Settings applied: {}", settings);
+    }
+
     /**
      * Handles cleanup and logging on application shutdown.
      */
     @Override
     public void stop() {
+        if (fullscreenDetectionService != null) {
+            fullscreenDetectionService.stop();
+        }
         if (idleDetectionService != null) {
             idleDetectionService.stop();
         }
