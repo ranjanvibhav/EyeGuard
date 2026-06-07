@@ -65,7 +65,7 @@ public class DashboardController implements Initializable {
         idleStatusLabel.textProperty().bind(viewModel.idleStatusTextProperty());
 
         viewModel.idleStatusStyleProperty().addListener((obs, oldVal, newVal) -> {
-            idleStatusLabel.getStyleClass().removeAll("status-text-active", "status-text-inactive");
+            idleStatusLabel.getStyleClass().removeAll("status-text-active", "status-text-inactive", "status-text-idle");
             if (newVal != null && !newVal.isEmpty()) {
                 idleStatusLabel.getStyleClass().add(newVal);
             }

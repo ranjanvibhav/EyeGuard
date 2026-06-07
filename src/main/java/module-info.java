@@ -9,6 +9,8 @@ module com.eyeguard {
     requires ch.qos.logback.classic;
     requires com.fasterxml.jackson.databind;
     requires java.desktop;
+    requires com.sun.jna;
+    requires com.sun.jna.platform;
 
     opens com.eyeguard.app to javafx.graphics;
     opens com.eyeguard.view to javafx.fxml;

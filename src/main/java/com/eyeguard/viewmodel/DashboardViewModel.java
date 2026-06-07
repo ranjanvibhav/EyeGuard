@@ -1,5 +1,6 @@
 package com.eyeguard.viewmodel;
 
+import com.eyeguard.service.IdleDetectionService;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -35,6 +36,23 @@ public class DashboardViewModel {
      */
     public DashboardViewModel() {
         LOGGER.debug("DashboardViewModel initialized with default placeholder values");
+    }
+
+    /**
+     * Constructs the DashboardViewModel bound to the IdleDetectionService status.
+     *
+     * @param idleDetectionService the inactivity monitoring service
+     */
+    public DashboardViewModel(final IdleDetectionService idleDetectionService) {
+        idleDetectionService.isIdleProperty().addListener((obs, old, isNowIdle) -> {
+            if (isNowIdle) {
+                idleStatusText.set("● Idle");
+                idleStatusStyle.set("status-text-idle");
+            } else {
+                idleStatusText.set("● Tracking");
+                idleStatusStyle.set("status-text-active");
+            }
+        });
     }
 
     /**

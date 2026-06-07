@@ -54,6 +54,12 @@
     -fx-font-weight: bold;
 }
 
+.status-text-idle {
+    -fx-text-fill: -fx-color-warning;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
 .btn-flat {
     -fx-background-color: transparent;
     -fx-text-fill: -fx-color-text-secondary;
