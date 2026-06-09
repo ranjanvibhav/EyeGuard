@@ -104,4 +104,23 @@ class DashboardViewModelTest {
         viewModel.activeStatusStyleProperty().set("status-text-inactive");
         assertEquals("status-text-inactive", viewModel.getActiveStatusStyle());
     }
+
+    @Test
+    void testConstructorWithServices() {
+        com.eyeguard.service.TimerService timer = org.mockito.Mockito.mock(com.eyeguard.service.TimerService.class);
+        com.eyeguard.service.DndService dnd = org.mockito.Mockito.mock(com.eyeguard.service.DndService.class);
+        com.eyeguard.service.IdleDetectionService idle = org.mockito.Mockito.mock(com.eyeguard.service.IdleDetectionService.class);
+        org.mockito.Mockito.when(timer.countdownTextProperty()).thenReturn(new javafx.beans.property.SimpleStringProperty("12:34"));
+        org.mockito.Mockito.when(timer.progressProperty()).thenReturn(new javafx.beans.property.SimpleDoubleProperty(0.6));
+        org.mockito.Mockito.when(timer.timerStateProperty()).thenReturn(new javafx.beans.property.SimpleObjectProperty<>(com.eyeguard.model.TimerState.RUNNING));
+        org.mockito.Mockito.when(timer.getTimerState()).thenReturn(com.eyeguard.model.TimerState.RUNNING);
+        org.mockito.Mockito.when(dnd.dndStatusTextProperty()).thenReturn(new javafx.beans.property.SimpleStringProperty("Reminders active"));
+        org.mockito.Mockito.when(dnd.getDndState()).thenReturn(com.eyeguard.model.DndState.INACTIVE);
+        org.mockito.Mockito.when(idle.isIdleProperty()).thenReturn(new javafx.beans.property.SimpleBooleanProperty(false));
+        DashboardViewModel model = new DashboardViewModel(timer, dnd, idle);
+        assertEquals("12:34", model.getNextBreakCountdown());
+        assertEquals(0.6, model.getTimerProgress());
+        assertEquals("Active", model.getActiveStatusText());
+        assertEquals("status-text-active", model.getActiveStatusStyle());
+    }
 }

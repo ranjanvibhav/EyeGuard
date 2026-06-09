@@ -53,13 +53,25 @@ public final class IconConverter {
     }
 
     private static void writeIcon(final BufferedImage img, final File output) throws Exception {
-        final File tempPng = File.createTempFile("icon", ".png");
-        try {
-            ImageIO.write(img, "png", tempPng);
-            Files.copy(tempPng.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING);
-            System.out.println("Icon created: " + output.getAbsolutePath());
-        } finally {
-            tempPng.delete();
+        final byte[] pngBytes = getPngBytes(img);
+        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(output)) {
+            fos.write(new byte[]{0, 0, 1, 0, 1, 0});
+            fos.write(new byte[]{0, 0, 0, 0, 1, 0, 32, 0});
+            final int size = pngBytes.length;
+            fos.write(new byte[]{
+                (byte) (size & 0xFF), (byte) ((size >> 8) & 0xFF),
+                (byte) ((size >> 16) & 0xFF), (byte) ((size >> 24) & 0xFF)
+            });
+            fos.write(new byte[]{22, 0, 0, 0});
+            fos.write(pngBytes);
+        }
+        System.out.println("Icon created: " + output.getAbsolutePath());
+    }
+
+    private static byte[] getPngBytes(final BufferedImage img) throws Exception {
+        try (java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream()) {
+            ImageIO.write(img, "png", baos);
+            return baos.toByteArray();
         }
     }
 }

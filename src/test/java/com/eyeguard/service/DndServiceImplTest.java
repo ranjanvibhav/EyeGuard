@@ -77,6 +77,23 @@ class DndServiceImplTest {
     }
 
     @Test
+    void testSnoozeIgnored() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
+        when(timerService.getRemainingSeconds()).thenReturn(600);
+        Platform.runLater(() -> {
+            try {
+                dndService.snooze(5);
+                assertEquals(DndState.INACTIVE, dndService.getDndState());
+                latch.countDown();
+            } catch (final Exception e) {
+                fail(e);
+            }
+        });
+        assertTrue(latch.await(5, TimeUnit.SECONDS));
+        dndService.shutdown();
+    }
+
+    @Test
     void testSnoozeInvalid() {
         assertThrows(IllegalArgumentException.class, () -> dndService.snooze(0));
         assertThrows(IllegalArgumentException.class, () -> dndService.snooze(-1));

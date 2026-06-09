@@ -60,8 +60,12 @@ public class DndServiceImpl implements DndService {
         if (minutes <= 0) {
             throw new IllegalArgumentException("Minutes must be positive: " + minutes);
         }
-        cancelResumeCountdown();
         final int snoozeSeconds = minutes * 60;
+        if (timerService.getRemainingSeconds() >= snoozeSeconds) {
+            log.info("Snooze ignored: remaining seconds {} >= {}", timerService.getRemainingSeconds(), snoozeSeconds);
+            return;
+        }
+        cancelResumeCountdown();
         dndRemainingSeconds = snoozeSeconds;
         timerService.reset(snoozeSeconds);
         runOnFxThread(() -> {
@@ -69,8 +73,7 @@ public class DndServiceImpl implements DndService {
             resumeTimeText.set(TimeFormatter.formatSeconds(snoozeSeconds));
             updateStatusText();
         });
-        resumeCountdownFuture = dndScheduler.scheduleAtFixedRate(
-                this::tickDndCountdown, 1, 1, TimeUnit.SECONDS);
+        resumeCountdownFuture = dndScheduler.scheduleAtFixedRate(this::tickDndCountdown, 1, 1, TimeUnit.SECONDS);
         log.info("Snoozed for {} minutes", minutes);
     }
 

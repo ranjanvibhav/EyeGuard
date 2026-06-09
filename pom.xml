@@ -239,6 +239,27 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-package-input-image</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <delete dir="target/installer/EyeGuard"/>
+                                        <mkdir dir="target/package-input"/>
+                                        <copy file="target/eyeguard-1.0.0-SNAPSHOT.jar" todir="target/package-input"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
                         <version>3.2.0</version>
@@ -250,10 +271,10 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>jpackage</executable>
+                                    <executable>${java.home}/bin/jpackage</executable>
                                     <arguments>
                                         <argument>--input</argument>
-                                        <argument>target</argument>
+                                        <argument>target/package-input</argument>
                                         <argument>--name</argument>
                                         <argument>EyeGuard</argument>
                                         <argument>--main-jar</argument>
@@ -285,6 +306,26 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-package-input-win</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="target/package-input"/>
+                                        <copy file="target/eyeguard-1.0.0-SNAPSHOT.jar" todir="target/package-input"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
                         <version>3.2.0</version>
@@ -296,10 +337,10 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>jpackage</executable>
+                                    <executable>${java.home}/bin/jpackage</executable>
                                     <arguments>
                                         <argument>--input</argument>
-                                        <argument>target</argument>
+                                        <argument>target/package-input</argument>
                                         <argument>--name</argument>
                                         <argument>EyeGuard</argument>
                                         <argument>--main-jar</argument>
@@ -334,6 +375,26 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-package-input-mac</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="target/package-input"/>
+                                        <copy file="target/eyeguard-1.0.0-SNAPSHOT.jar" todir="target/package-input"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>exec-maven-plugin</artifactId>
                         <version>3.2.0</version>
@@ -345,10 +406,10 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>jpackage</executable>
+                                    <executable>${java.home}/bin/jpackage</executable>
                                     <arguments>
                                         <argument>--input</argument>
-                                        <argument>target</argument>
+                                        <argument>target/package-input</argument>
                                         <argument>--name</argument>
                                         <argument>EyeGuard</argument>
                                         <argument>--main-jar</argument>

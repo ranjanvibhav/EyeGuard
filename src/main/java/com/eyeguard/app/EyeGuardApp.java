@@ -38,6 +38,7 @@ import com.eyeguard.service.PreWarningServiceImpl;
 import com.eyeguard.service.StartupService;
 import com.eyeguard.service.StartupServiceFactory;
 import com.eyeguard.util.IconLoader;
+import com.eyeguard.util.SingleInstanceDetector;
 import java.io.IOException;
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -78,6 +79,7 @@ public class EyeGuardApp extends Application {
     private ToastService toastService;
     private PreWarningService preWarningService;
     private StartupService startupService;
+    private TrayViewModel trayViewModel;
 
     /**
      * Starts the JavaFX application by initializing the primary stage and loading the UI.
@@ -86,9 +88,13 @@ public class EyeGuardApp extends Application {
      */
     @Override
     public void start(final Stage primaryStage) {
+        this.primaryStage = primaryStage;
+        if (!SingleInstanceDetector.checkAndRegister(this::showExistingInstance)) {
+            handleDuplicateInstance();
+            return;
+        }
         try {
             LOGGER.info("EyeGuard application starting...");
-            this.primaryStage = primaryStage;
             loadApplicationSettings();
             initCoreServices();
             setupFullscreenDetection();
@@ -100,6 +106,21 @@ public class EyeGuardApp extends Application {
             LOGGER.error("Failed to initialize EyeGuard", exception);
             throw new EyeGuardException("Failed to initialize EyeGuard user interface", exception);
         }
+    }
+
+    private void handleDuplicateInstance() {
+        LOGGER.info("Another instance of EyeGuard is already running. Exiting.");
+        Platform.exit();
+        System.exit(0);
+    }
+
+    private void showExistingInstance() {
+        Platform.runLater(() -> {
+            if (primaryStage != null) {
+                primaryStage.show();
+                primaryStage.toFront();
+            }
+        });
     }
 
     private void initCoreServices() {
@@ -201,12 +222,19 @@ public class EyeGuardApp extends Application {
      * @param stage the primary stage of the application
      */
     private void setupTray(final Stage stage) {
-        dashboardViewModel = new DashboardViewModel(idleDetectionService);
+        dashboardViewModel = new DashboardViewModel(timerService, dndService, idleDetectionService);
+        dashboardViewModel.setOnSnoozeQuick(() -> dndService.snooze(5));
+        dashboardViewModel.setOnPauseQuick(() -> mainViewModel.handlePause());
+        dashboardViewModel.setOnSettingsQuick(this::openSettingsWindow);
         dashboardService = new DashboardServiceImpl(dashboardViewModel);
         initTrayService(stage);
-        final TrayViewModel trayViewModel = new TrayViewModel(timerService, dndService, workingHoursService);
+        trayViewModel = new TrayViewModel(timerService, dndService, workingHoursService);
         trayViewModel.pauseMenuItemTextProperty().addListener((obs, old, newVal) ->
             trayService.updatePauseMenuItem(newVal));
+        trayViewModel.tooltipTextProperty().addListener((obs, old, newVal) ->
+            trayService.updateTooltip(newVal));
+        trayViewModel.statusMenuItemTextProperty().addListener((obs, old, newVal) ->
+            trayService.updateStatusMenuItem(newVal));
         trayService.initializeTray();
         initWarningAndStartup();
         configureStageClose(stage, trayViewModel);
@@ -365,6 +393,7 @@ public class EyeGuardApp extends Application {
     @Override
     public void stop() {
         stopServices();
+        SingleInstanceDetector.shutdown();
         if (preWarningService != null) {
             preWarningService.detach();
         }
