@@ -1,5 +1,8 @@
 package com.eyeguard.viewmodel;
 
+import com.eyeguard.service.TimerService;
+import com.eyeguard.service.DndService;
+import com.eyeguard.service.WorkingHoursService;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -27,6 +30,8 @@ public class TrayViewModel {
     private final BooleanProperty isPaused = new SimpleBooleanProperty(INITIAL_PAUSED);
     private final StringProperty pauseMenuItemText = new SimpleStringProperty(INITIAL_PAUSE_LABEL);
     private final StringProperty errorMessage = new SimpleStringProperty(INITIAL_ERROR);
+    private DndService dndService;
+    private WorkingHoursService workingHoursService;
 
     /**
      * Constructs the TrayViewModel and logs initialization.
@@ -36,9 +41,72 @@ public class TrayViewModel {
     }
 
     /**
+     * Constructs the TrayViewModel bound to the TimerService countdown ticks.
+     *
+     * @param timerService the core countdown timer service
+     */
+    public TrayViewModel(final TimerService timerService) {
+        timerService.countdownTextProperty().addListener((obs, oldVal, newVal) -> {
+            final String tooltip = "EyeGuard — Next break in: " + newVal;
+            tooltipText.set(tooltip);
+            statusMenuItemText.set("Next break in: " + newVal);
+        });
+    }
+
+    /**
+     * Constructs the TrayViewModel bound to the TimerService and DndService.
+     *
+     * @param timerService the core countdown timer service
+     * @param dndService   the DND state coordination service
+     */
+    public TrayViewModel(final TimerService timerService, final DndService dndService) {
+        this.dndService = dndService;
+        timerService.countdownTextProperty().addListener((obs, oldVal, newVal) -> {
+            if (isOutsideHours()) return;
+            if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+                updateTooltipAndStatus("Next break in: " + newVal);
+            }
+        });
+        dndService.dndStateProperty().addListener((obs, old, newState) -> updatePauseMenuText(newState));
+        dndService.dndStatusTextProperty().addListener((obs, old, newVal) -> {
+            if (isOutsideHours()) return;
+            updateTooltipAndStatus(newVal);
+        });
+    }
+
+    /**
+     * Constructs the TrayViewModel bound to the TimerService, DndService, and WorkingHoursService.
+     *
+     * @param timerService        the core countdown timer service
+     * @param dndService          the DND state coordination service
+     * @param workingHoursService the working hours enforcement service
+     */
+    public TrayViewModel(final TimerService timerService,
+                         final DndService dndService,
+                         final WorkingHoursService workingHoursService) {
+        this(timerService, dndService);
+        this.workingHoursService = workingHoursService;
+        workingHoursService.withinWorkingHoursProperty().addListener((obs, old, isWithin) -> {
+            if (!isWithin) {
+                updateTooltipAndStatus("Outside working hours");
+            } else {
+                updateTooltipAndStatus("Next break in: " + timerService.countdownTextProperty().get());
+            }
+        });
+    }
+
+    /**
      * Toggles the pause state of reminders and updates the pause menu item text.
      */
     public void togglePause() {
+        if (dndService != null) {
+            if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+                dndService.pause();
+            } else {
+                dndService.resume();
+            }
+            return;
+        }
         if (!isPaused.get()) {
             isPaused.set(true);
             pauseMenuItemText.set(LABEL_RESUME);
@@ -47,6 +115,15 @@ public class TrayViewModel {
             isPaused.set(false);
             pauseMenuItemText.set(INITIAL_PAUSE_LABEL);
             LOGGER.info("Reminders resumed");
+        }
+    }
+
+    private void updatePauseMenuText(final com.eyeguard.model.DndState state) {
+        switch (state) {
+            case INACTIVE -> pauseMenuItemText.set(INITIAL_PAUSE_LABEL);
+            case PAUSED -> pauseMenuItemText.set(LABEL_RESUME);
+            case SNOOZED -> pauseMenuItemText.set("Resume (Snoozed)");
+            case MEETING_MODE -> pauseMenuItemText.set("Resume (Meeting Mode)");
         }
     }
 
@@ -138,5 +215,13 @@ public class TrayViewModel {
      */
     public String getErrorMessage() {
         return errorMessage.get();
+    }
+    private boolean isOutsideHours() {
+        return workingHoursService != null && !workingHoursService.isWithinWorkingHours();
+    }
+
+    private void updateTooltipAndStatus(final String status) {
+        statusMenuItemText.set(status);
+        tooltipText.set("EyeGuard — " + status);
     }
 }

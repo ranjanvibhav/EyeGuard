@@ -10,7 +10,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.eyeguard.view.MainWindowController"
@@ -22,7 +23,11 @@
             <padding>
                 <Insets top="16" right="24" bottom="16" left="24"/>
             </padding>
-            <Circle radius="14" styleClass="logo-placeholder"/>
+            <ImageView fitWidth="28" fitHeight="28" preserveRatio="true">
+                <image>
+                    <Image url="@../images/eye.png"/>
+                </image>
+            </ImageView>
             <Label text="EyeGuard" styleClass="app-title"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="statusBadge" styleClass="status-badge"/>

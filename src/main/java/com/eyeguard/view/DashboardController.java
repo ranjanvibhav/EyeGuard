@@ -64,12 +64,19 @@ public class DashboardController implements Initializable {
         sessionDurationLabel.textProperty().bind(viewModel.sessionDurationProperty());
         idleStatusLabel.textProperty().bind(viewModel.idleStatusTextProperty());
 
-        viewModel.idleStatusStyleProperty().addListener((obs, oldVal, newVal) -> {
-            idleStatusLabel.getStyleClass().removeAll("status-text-active", "status-text-inactive");
-            if (newVal != null && !newVal.isEmpty()) {
-                idleStatusLabel.getStyleClass().add(newVal);
-            }
-        });
+        viewModel.idleStatusStyleProperty().addListener((obs, oldVal, newVal) ->
+            updateLabelStyle(idleStatusLabel, newVal));
+        viewModel.activeStatusStyleProperty().addListener((obs, oldVal, newVal) ->
+            updateLabelStyle(activeStatusLabel, newVal));
+        updateLabelStyle(idleStatusLabel, viewModel.getIdleStatusStyle());
+        updateLabelStyle(activeStatusLabel, viewModel.getActiveStatusStyle());
+    }
+
+    private void updateLabelStyle(final Label label, final String newVal) {
+        label.getStyleClass().removeAll("status-text-active", "status-text-inactive", "status-text-idle");
+        if (newVal != null && !newVal.isEmpty()) {
+            label.getStyleClass().add(newVal);
+        }
     }
 
     /**
@@ -97,16 +104,34 @@ public class DashboardController implements Initializable {
 
     @FXML
     private void handleSnoozeQuick() {
+        if (viewModel.getOnSnoozeQuick() != null) {
+            viewModel.getOnSnoozeQuick().run();
+        }
+        if (stage != null) {
+            stage.hide();
+        }
         LOGGER.info("Quick snooze from dashboard");
     }
 
     @FXML
     private void handlePauseQuick() {
+        if (viewModel.getOnPauseQuick() != null) {
+            viewModel.getOnPauseQuick().run();
+        }
+        if (stage != null) {
+            stage.hide();
+        }
         LOGGER.info("Quick pause from dashboard");
     }
 
     @FXML
     private void handleSettingsQuick() {
+        if (viewModel.getOnSettingsQuick() != null) {
+            viewModel.getOnSettingsQuick().run();
+        }
+        if (stage != null) {
+            stage.hide();
+        }
         LOGGER.info("Quick settings from dashboard");
     }
 }

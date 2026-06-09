@@ -78,6 +78,23 @@
             <version>${monocle.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.11.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna-platform</artifactId>
+            <version>5.14.0</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -157,6 +174,269 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Exec Maven Plugin to generate eye.ico from eye.png before packaging -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-ico</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.eyeguard.util.IconConverter</mainClass>
+                            <arguments>
+                                <argument>src/main/resources/images/eye.png</argument>
+                                <argument>packaging/windows/eye.ico</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Shade Plugin to create a fat jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.2</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.eyeguard.app.Launcher</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>package-windows-image</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-package-input-image</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <delete dir="target/installer/EyeGuard"/>
+                                        <mkdir dir="target/package-input"/>
+                                        <copy file="target/eyeguard-1.0.0-SNAPSHOT.jar" todir="target/package-input"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>jpackage-windows-image</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${java.home}/bin/jpackage</executable>
+                                    <arguments>
+                                        <argument>--input</argument>
+                                        <argument>target/package-input</argument>
+                                        <argument>--name</argument>
+                                        <argument>EyeGuard</argument>
+                                        <argument>--main-jar</argument>
+                                        <argument>eyeguard-1.0.0-SNAPSHOT.jar</argument>
+                                        <argument>--main-class</argument>
+                                        <argument>com.eyeguard.app.Launcher</argument>
+                                        <argument>--type</argument>
+                                        <argument>app-image</argument>
+                                        <argument>--icon</argument>
+                                        <argument>packaging/windows/eye.ico</argument>
+                                        <argument>--app-version</argument>
+                                        <argument>1.0.0</argument>
+                                        <argument>--vendor</argument>
+                                        <argument>EyeGuard</argument>
+                                        <argument>--description</argument>
+                                        <argument>Eye break reminder — 20-20-20 rule</argument>
+                                        <argument>--dest</argument>
+                                        <argument>target/installer</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>package-windows</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-package-input-win</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="target/package-input"/>
+                                        <copy file="target/eyeguard-1.0.0-SNAPSHOT.jar" todir="target/package-input"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>jpackage-windows</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${java.home}/bin/jpackage</executable>
+                                    <arguments>
+                                        <argument>--input</argument>
+                                        <argument>target/package-input</argument>
+                                        <argument>--name</argument>
+                                        <argument>EyeGuard</argument>
+                                        <argument>--main-jar</argument>
+                                        <argument>eyeguard-1.0.0-SNAPSHOT.jar</argument>
+                                        <argument>--main-class</argument>
+                                        <argument>com.eyeguard.app.Launcher</argument>
+                                        <argument>--type</argument>
+                                        <argument>exe</argument>
+                                        <argument>--icon</argument>
+                                        <argument>packaging/windows/eye.ico</argument>
+                                        <argument>--app-version</argument>
+                                        <argument>1.0.0</argument>
+                                        <argument>--vendor</argument>
+                                        <argument>EyeGuard</argument>
+                                        <argument>--description</argument>
+                                        <argument>Eye break reminder — 20-20-20 rule</argument>
+                                        <argument>--win-menu</argument>
+                                        <argument>--win-shortcut</argument>
+                                        <argument>--win-dir-chooser</argument>
+                                        <argument>--dest</argument>
+                                        <argument>target/installer</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>package-macos</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-package-input-mac</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="target/package-input"/>
+                                        <copy file="target/eyeguard-1.0.0-SNAPSHOT.jar" todir="target/package-input"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.2.0</version>
+                        <executions>
+                            <execution>
+                                <id>jpackage-macos</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${java.home}/bin/jpackage</executable>
+                                    <arguments>
+                                        <argument>--input</argument>
+                                        <argument>target/package-input</argument>
+                                        <argument>--name</argument>
+                                        <argument>EyeGuard</argument>
+                                        <argument>--main-jar</argument>
+                                        <argument>eyeguard-1.0.0-SNAPSHOT.jar</argument>
+                                        <argument>--main-class</argument>
+                                        <argument>com.eyeguard.app.Launcher</argument>
+                                        <argument>--type</argument>
+                                        <argument>dmg</argument>
+                                        <argument>--icon</argument>
+                                        <argument>packaging/macos/eye.icns</argument>
+                                        <argument>--app-version</argument>
+                                        <argument>1.0.0</argument>
+                                        <argument>--vendor</argument>
+                                        <argument>EyeGuard</argument>
+                                        <argument>--description</argument>
+                                        <argument>Eye break reminder — 20-20-20 rule</argument>
+                                        <argument>--mac-package-name</argument>
+                                        <argument>EyeGuard</argument>
+                                        <argument>--dest</argument>
+                                        <argument>target/installer</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

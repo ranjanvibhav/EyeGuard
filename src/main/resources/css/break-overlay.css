@@ -118,3 +118,8 @@
     -fx-background-insets: 0;
     -fx-border-color: -fx-color-accent;
 }
+
+.overlay-icon {
+    -fx-opacity: 0.9;
+    -fx-effect: dropshadow(three-pass-box, rgba(46, 196, 182, 0.4), 8, 0.0, 0, 2);
+}

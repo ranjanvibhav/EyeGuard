@@ -45,3 +45,15 @@ MIT — see LICENSE file for details.
 ## Contributing
 Pull requests are welcome. Please open an issue first to discuss
 what you would like to change.
+
+## Important Development Notes
+
+### Native Packaging (`jpackage`)
+> [!IMPORTANT]
+> **Avoid Recursive Packaging Directory Loops:**
+> When configuring packaging profiles using `jpackage`, **never** set the `--input` directory to `target` or any folder that contains the output `--dest` folder (like `target/installer`).
+> 
+> Doing so causes `jpackage` to package its own output recursively, creating infinitely nested directories that exceed Windows path limits and cause stack overflows during cleanups. 
+> 
+> Always use a dedicated staging subdirectory (e.g. `target/package-input`) to isolate the target fat JAR before running `jpackage`.
+

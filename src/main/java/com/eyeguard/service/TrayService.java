@@ -40,4 +40,12 @@ public interface TrayService {
      * Must be called on the AWT Event Dispatch Thread.
      */
     void dispose();
+
+    /**
+     * Toggles the system tray icon to show orange warning color or normal teal.
+     * Must be called on the AWT Event Dispatch Thread.
+     *
+     * @param warning true to show warning mode, false to show normal mode
+     */
+    void setWarningMode(boolean warning);
 }

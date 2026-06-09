@@ -51,6 +51,18 @@
     -fx-background-color: -fx-color-success;
 }
 
+.status-badge-paused {
+    -fx-background-color: -fx-color-warning;
+}
+
+.status-badge-warning {
+    -fx-background-color: -fx-color-danger;
+}
+
+.status-badge-stopped {
+    -fx-background-color: -fx-color-text-secondary;
+}
+
 /* Card layout */
 .card {
     -fx-background-color: -fx-color-surface;

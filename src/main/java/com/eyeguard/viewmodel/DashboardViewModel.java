@@ -1,5 +1,8 @@
 package com.eyeguard.viewmodel;
 
+import com.eyeguard.service.IdleDetectionService;
+import com.eyeguard.service.TimerService;
+import com.eyeguard.service.DndService;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -30,11 +33,124 @@ public class DashboardViewModel {
     private final StringProperty idleStatusStyle = new SimpleStringProperty("status-text-active");
     private final StringProperty errorMessage = new SimpleStringProperty("");
 
+    private Runnable onSnoozeQuick;
+    private Runnable onPauseQuick;
+    private Runnable onSettingsQuick;
+
     /**
      * Constructs the DashboardViewModel.
      */
     public DashboardViewModel() {
         LOGGER.debug("DashboardViewModel initialized with default placeholder values");
+    }
+
+    /**
+     * Constructs the DashboardViewModel bound to the IdleDetectionService status.
+     *
+     * @param idleDetectionService the inactivity monitoring service
+     */
+    public DashboardViewModel(final IdleDetectionService idleDetectionService) {
+        idleDetectionService.isIdleProperty().addListener((obs, old, isNowIdle) -> {
+            if (isNowIdle) {
+                idleStatusText.set("● Idle");
+                idleStatusStyle.set("status-text-idle");
+            } else {
+                idleStatusText.set("● Tracking");
+                idleStatusStyle.set("status-text-active");
+            }
+        });
+    }
+
+    /**
+     * Constructs the DashboardViewModel bound to the core timer, dnd, and idle services.
+     *
+     * @param timerService the core countdown timer service
+     * @param dndService   the DND state coordination service
+     * @param idleService  the inactivity monitoring service
+     */
+    public DashboardViewModel(final TimerService timerService,
+                              final DndService dndService,
+                              final IdleDetectionService idleService) {
+        this(idleService);
+        nextBreakCountdown.bind(timerService.countdownTextProperty());
+        timerProgress.bind(timerService.progressProperty());
+        dndService.dndStatusTextProperty().addListener((obs, old, newVal) -> updateStatus(timerService, dndService));
+        timerService.timerStateProperty().addListener((obs, old, newVal) -> updateStatus(timerService, dndService));
+        updateStatus(timerService, dndService);
+    }
+
+    private void updateStatus(final TimerService timer, final DndService dnd) {
+        final com.eyeguard.model.DndState dndState = dnd.getDndState();
+        if (dndState != com.eyeguard.model.DndState.INACTIVE) {
+            activeStatusText.set(dndState.name());
+            activeStatusStyle.set("status-text-idle");
+            return;
+        }
+        switch (timer.getTimerState()) {
+            case RUNNING -> setStatusState("Active", "status-text-active");
+            case PAUSED -> setStatusState("Paused", "status-text-inactive");
+            case BREAK_DUE -> setStatusState("Break!", "status-text-idle");
+            default -> setStatusState(timer.getTimerState().name(), "status-text-inactive");
+        }
+    }
+
+    private void setStatusState(final String text, final String style) {
+        activeStatusText.set(text);
+        activeStatusStyle.set(style);
+    }
+
+    /**
+     * Sets the Runnable callback for quick snooze button action.
+     *
+     * @param callback the quick snooze callback
+     */
+    public void setOnSnoozeQuick(final Runnable callback) {
+        this.onSnoozeQuick = callback;
+    }
+
+    /**
+     * Gets the Runnable callback for quick snooze button action.
+     *
+     * @return the quick snooze callback
+     */
+    public Runnable getOnSnoozeQuick() {
+        return onSnoozeQuick;
+    }
+
+    /**
+     * Sets the Runnable callback for quick pause button action.
+     *
+     * @param callback the quick pause callback
+     */
+    public void setOnPauseQuick(final Runnable callback) {
+        this.onPauseQuick = callback;
+    }
+
+    /**
+     * Gets the Runnable callback for quick pause button action.
+     *
+     * @return the quick pause callback
+     */
+    public Runnable getOnPauseQuick() {
+        return onPauseQuick;
+    }
+
+    /**
+     * Sets the Runnable callback for quick settings button action.
+     *
+     * @param callback the quick settings callback
+     */
+    public void setOnSettingsQuick(final Runnable callback) {
+        this.onSettingsQuick = callback;
+    }
+
+    /**
+     * Gets the Runnable callback for quick settings button action.
+     *
+     * @return the quick settings callback
+     */
+    public Runnable getOnSettingsQuick() {
+        return onSettingsQuick;
     }
 
     /**

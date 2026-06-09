@@ -8,6 +8,8 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 
 <StackPane fx:id="rootPane" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.eyeguard.view.BreakOverlayController"
@@ -21,6 +23,11 @@
 
         <!-- Top Section: Title and Subtitle -->
         <VBox alignment="CENTER" spacing="8">
+            <ImageView fitWidth="64" fitHeight="64" preserveRatio="true" styleClass="overlay-icon">
+                <image>
+                    <Image url="@../images/eye.png"/>
+                </image>
+            </ImageView>
             <Label text="Time for an Eye Break" styleClass="title-label"/>
             <Label text="Rest your eyes to prevent strain" styleClass="subtitle-label"/>
         </VBox>

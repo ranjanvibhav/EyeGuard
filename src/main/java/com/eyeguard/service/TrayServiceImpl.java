@@ -23,7 +23,10 @@ public class TrayServiceImpl implements TrayService {
 
     private final Runnable onOpenWindow;
     private final Runnable onOpenDashboard;
-    private final Runnable onSnooze;
+    private final Runnable onSnooze5;
+    private final Runnable onSnooze10;
+    private final Runnable onMeetingMode30;
+    private final Runnable onMeetingMode60;
     private final Runnable onPauseResume;
     private final Runnable onOpenSettings;
     private final Runnable onQuit;
@@ -34,7 +37,7 @@ public class TrayServiceImpl implements TrayService {
     private MenuItem pauseMenuItem;
 
     /**
-     * Constructs the TrayServiceImpl with the specified action callbacks.
+     * Constructs the TrayServiceImpl with the specified action callbacks (legacy constructor).
      *
      * @param onOpenWindow callback to show the main window
      * @param onOpenDashboard callback to show the dashboard popup
@@ -49,9 +52,37 @@ public class TrayServiceImpl implements TrayService {
                            final Runnable onPauseResume,
                            final Runnable onOpenSettings,
                            final Runnable onQuit) {
+        this(onOpenWindow, onOpenDashboard, onSnooze, onSnooze, onSnooze, onSnooze, onPauseResume, onOpenSettings, onQuit);
+    }
+
+    /**
+     * Constructs the TrayServiceImpl with all action callbacks.
+     *
+     * @param onOpenWindow callback to show the main window
+     * @param onOpenDashboard callback to show the dashboard popup
+     * @param onSnooze5 callback to snooze reminders for 5 minutes
+     * @param onSnooze10 callback to snooze reminders for 10 minutes
+     * @param onMeetingMode30 callback to enable meeting mode for 30 minutes
+     * @param onMeetingMode60 callback to enable meeting mode for 60 minutes
+     * @param onPauseResume callback to pause/resume reminders
+     * @param onOpenSettings callback to show the settings window
+     * @param onQuit callback to exit the application cleanly
+     */
+    public TrayServiceImpl(final Runnable onOpenWindow,
+                           final Runnable onOpenDashboard,
+                           final Runnable onSnooze5,
+                           final Runnable onSnooze10,
+                           final Runnable onMeetingMode30,
+                           final Runnable onMeetingMode60,
+                           final Runnable onPauseResume,
+                           final Runnable onOpenSettings,
+                           final Runnable onQuit) {
         this.onOpenWindow = onOpenWindow;
         this.onOpenDashboard = onOpenDashboard;
-        this.onSnooze = onSnooze;
+        this.onSnooze5 = onSnooze5;
+        this.onSnooze10 = onSnooze10;
+        this.onMeetingMode30 = onMeetingMode30;
+        this.onMeetingMode60 = onMeetingMode60;
         this.onPauseResume = onPauseResume;
         this.onOpenSettings = onOpenSettings;
         this.onQuit = onQuit;
@@ -92,8 +123,20 @@ public class TrayServiceImpl implements TrayService {
             popupMenu.addSeparator();
 
             final MenuItem snoozeItem = new MenuItem("Snooze 5 minutes");
-            snoozeItem.addActionListener(e -> Platform.runLater(onSnooze));
+            snoozeItem.addActionListener(e -> Platform.runLater(onSnooze5));
             popupMenu.add(snoozeItem);
+
+            final MenuItem snooze10Item = new MenuItem("Snooze 10 minutes");
+            snooze10Item.addActionListener(e -> Platform.runLater(onSnooze10));
+            popupMenu.add(snooze10Item);
+
+            final MenuItem meeting30Item = new MenuItem("Meeting Mode (30 min)");
+            meeting30Item.addActionListener(e -> Platform.runLater(onMeetingMode30));
+            popupMenu.add(meeting30Item);
+
+            final MenuItem meeting60Item = new MenuItem("Meeting Mode (60 min)");
+            meeting60Item.addActionListener(e -> Platform.runLater(onMeetingMode60));
+            popupMenu.add(meeting60Item);
 
             pauseMenuItem = new MenuItem("Pause Reminders");
             pauseMenuItem.addActionListener(e -> Platform.runLater(onPauseResume));
@@ -182,6 +225,24 @@ public class TrayServiceImpl implements TrayService {
                 systemTray.remove(trayIcon);
                 trayIcon = null;
                 LOGGER.info("System tray disposed");
+            }
+        });
+    }
+
+    @Override
+    public void setWarningMode(final boolean warning) {
+        runOnAwtThread(() -> {
+            if (trayIcon != null) {
+                if (warning) {
+                    final java.awt.Image orangeImage = TrayIconFactory.createTrayIconImage(TRAY_ICON_SIZE,
+                            new java.awt.Color(0xF4, 0xA2, 0x61, 255));
+                    trayIcon.setImage(orangeImage);
+                    LOGGER.debug("Tray icon set to warning mode");
+                } else {
+                    final java.awt.Image normalImage = TrayIconFactory.createTrayIconImage(TRAY_ICON_SIZE);
+                    trayIcon.setImage(normalImage);
+                    LOGGER.debug("Tray icon returned to normal");
+                }
             }
         });
     }
