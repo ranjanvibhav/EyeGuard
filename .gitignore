@@ -49,3 +49,5 @@ logs/
 hs_err_pid*
 
 .tooling/
+packaging/windows/eye.ico
+
