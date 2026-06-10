@@ -53,7 +53,7 @@ public class WindowsStartupService implements StartupService {
     private String getCommand() throws URISyntaxException {
         final String procCmd = ProcessHandle.current().info().command().orElse("");
         if (!procCmd.isEmpty() && procCmd.endsWith(".exe") && !procCmd.toLowerCase().contains("java")) {
-            return "\"" + procCmd + "\"";
+            return "\"" + procCmd + "\" --startup";
         }
         final var cs = WindowsStartupService.class.getProtectionDomain().getCodeSource();
         if (cs != null && cs.getLocation() != null) {
@@ -61,10 +61,10 @@ public class WindowsStartupService implements StartupService {
             final File installDir = jarFile.getName().endsWith(".jar") ? jarFile.getParentFile().getParentFile() : null;
             final File exeFile = installDir != null ? new File(installDir, "EyeGuard.exe") : null;
             if (exeFile != null && exeFile.exists()) {
-                return "\"" + exeFile.getAbsolutePath() + "\"";
+                return "\"" + exeFile.getAbsolutePath() + "\" --startup";
             }
         }
         final String javaw = System.getProperty("java.home") + File.separator + "bin" + File.separator + "javaw.exe";
-        return "\"" + javaw + "\" -cp \"" + System.getProperty("java.class.path") + "\" com.eyeguard.app.Launcher";
+        return "\"" + javaw + "\" -cp \"" + System.getProperty("java.class.path") + "\" com.eyeguard.app.Launcher --startup";
     }
 }

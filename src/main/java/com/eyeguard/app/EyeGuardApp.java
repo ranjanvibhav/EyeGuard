@@ -173,14 +173,11 @@ public class EyeGuardApp extends Application {
             loadApplicationSettings();
             applySettings(currentSettings);
         }));
-        final Scene scene = new Scene(root);
-        setupStage(stage, scene);
+        setupStage(stage, new Scene(root));
         setupTray(stage);
-        final javafx.scene.image.Image icon = IconLoader.loadJavaFXImage(64, 64);
-        if (icon != null) {
-            stage.getIcons().add(icon);
-        }
-        stage.show();
+        final var icon = IconLoader.loadJavaFXImage(64, 64);
+        if (icon != null) stage.getIcons().add(icon);
+        if (!getParameters().getRaw().contains("--startup")) stage.show();
     }
 
     private void loadApplicationSettings() {
