@@ -175,29 +175,6 @@
                 </executions>
             </plugin>
 
-            <!-- Exec Maven Plugin to generate eye.ico from eye.png before packaging -->
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>generate-ico</id>
-                        <phase>prepare-package</phase>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>com.eyeguard.util.IconConverter</mainClass>
-                            <arguments>
-                                <argument>src/main/resources/images/eye.png</argument>
-                                <argument>packaging/windows/eye.ico</argument>
-                            </arguments>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- Maven Shade Plugin to create a fat jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -226,6 +203,36 @@
                                     <mainClass>com.eyeguard.app.Launcher</mainClass>
                                 </transformer>
                             </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Maven Antrun Plugin (placeholder to ensure it runs after shade) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+            </plugin>
+
+            <!-- Exec Maven Plugin to generate eye.ico from eye.png before packaging -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>generate-ico</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>com.eyeguard.util.IconConverter</mainClass>
+                            <arguments>
+                                <argument>src/main/resources/images/eye.png</argument>
+                                <argument>packaging/windows/eye.ico</argument>
+                            </arguments>
                         </configuration>
                     </execution>
                 </executions>
@@ -362,6 +369,8 @@
                                         <argument>--win-dir-chooser</argument>
                                         <argument>--dest</argument>
                                         <argument>target/installer</argument>
+                                        <argument>--resource-dir</argument>
+                                        <argument>packaging/windows</argument>
                                     </arguments>
                                 </configuration>
                             </execution>

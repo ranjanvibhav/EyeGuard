@@ -173,14 +173,11 @@ public class EyeGuardApp extends Application {
             loadApplicationSettings();
             applySettings(currentSettings);
         }));
-        final Scene scene = new Scene(root);
-        setupStage(stage, scene);
+        setupStage(stage, new Scene(root));
         setupTray(stage);
-        final javafx.scene.image.Image icon = IconLoader.loadJavaFXImage(64, 64);
-        if (icon != null) {
-            stage.getIcons().add(icon);
-        }
-        stage.show();
+        final var icon = IconLoader.loadJavaFXImage(64, 64);
+        if (icon != null) stage.getIcons().add(icon);
+        if (!getParameters().getRaw().contains("--startup")) stage.show();
     }
 
     private void loadApplicationSettings() {
@@ -259,7 +256,15 @@ public class EyeGuardApp extends Application {
         preWarningService = new PreWarningServiceImpl(toastService, trayService);
         preWarningService.attach(timerService);
         startupService = StartupServiceFactory.create();
-        applyStartupSetting(currentSettings.isLaunchAtStartupEnabled());
+        final boolean registered = startupService.isRegistered();
+        if (registered != currentSettings.isLaunchAtStartupEnabled()) {
+            currentSettings.setLaunchAtStartupEnabled(registered);
+            try {
+                configurationService.saveSettings(currentSettings);
+            } catch (final Exception e) {
+                LOGGER.error("Failed to save synced startup settings", e);
+            }
+        }
     }
 
     private void configureStageClose(final Stage stage, final TrayViewModel trayViewModel) {
