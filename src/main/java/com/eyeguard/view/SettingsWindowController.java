@@ -69,8 +69,6 @@ public class SettingsWindowController implements Initializable {
     @FXML
     private ToggleSwitch idleDetectionToggle;
 
-    @FXML
-    private ToggleSwitch soundAlertToggle;
 
     @FXML
     private ToggleSwitch startupToggle;
@@ -142,27 +140,16 @@ public class SettingsWindowController implements Initializable {
      * Binds UI controls bidirectionally to the ViewModel properties.
      */
     private void performBindings() {
-        if (viewModel == null) {
-            return;
-        }
-
-        // Bind choice boxes
+        if (viewModel == null) return;
         snoozeDurationChoice.valueProperty().bindBidirectional(viewModel.snoozeDurationProperty());
         workStartChoice.valueProperty().bindBidirectional(viewModel.workStartTimeProperty());
         workEndChoice.valueProperty().bindBidirectional(viewModel.workEndTimeProperty());
-
-        // Bind toggle switches
         workingHoursToggle.selectedProperty().bindBidirectional(viewModel.workingHoursEnabledProperty());
         weekendToggle.selectedProperty().bindBidirectional(viewModel.weekendRemindersEnabledProperty());
         fullscreenPauseToggle.selectedProperty().bindBidirectional(viewModel.fullscreenPauseEnabledProperty());
         idleDetectionToggle.selectedProperty().bindBidirectional(viewModel.idleDetectionEnabledProperty());
-        soundAlertToggle.selectedProperty().bindBidirectional(viewModel.soundAlertsEnabledProperty());
         startupToggle.selectedProperty().bindBidirectional(viewModel.launchAtStartupEnabledProperty());
-
-        // Bind error label
         settingsErrorLabel.textProperty().bind(viewModel.errorMessageProperty());
-
-        // Setup double-to-integer mappings for sliders
         bindSliders();
     }
 

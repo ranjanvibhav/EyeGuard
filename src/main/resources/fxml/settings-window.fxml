@@ -162,17 +162,6 @@
 
                                     <Separator styleClass="settings-divider"/>
 
-                                    <!-- Sound Alerts -->
-                                    <HBox alignment="CENTER_LEFT" spacing="16">
-                                        <VBox spacing="4" HBox.hgrow="ALWAYS">
-                                            <Label text="Sound Alerts" styleClass="section-heading"/>
-                                            <Label text="Play a chime before the overlay appears" styleClass="section-description"/>
-                                        </VBox>
-                                        <ToggleSwitch fx:id="soundAlertToggle"/>
-                                    </HBox>
-
-                                    <Separator styleClass="settings-divider"/>
-
                                     <!-- Launch at Startup -->
                                     <HBox alignment="CENTER_LEFT" spacing="16">
                                         <VBox spacing="4" HBox.hgrow="ALWAYS">
