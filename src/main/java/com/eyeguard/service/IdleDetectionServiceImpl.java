@@ -28,6 +28,8 @@ public class IdleDetectionServiceImpl implements IdleDetectionService {
     private volatile boolean running;
     private Runnable onIdleDetected;
     private Runnable onActivityResumed;
+    private WindowsSessionLockMonitor lockMonitor;
+    private volatile boolean isLocked = false;
 
     /**
      * Constructs the IdleDetectionServiceImpl with OS-appropriate system idle provider.
@@ -44,6 +46,13 @@ public class IdleDetectionServiceImpl implements IdleDetectionService {
         this.isIdle = new SimpleBooleanProperty(false);
         this.idleThresholdSeconds = DEFAULT_IDLE_THRESHOLD_SECONDS;
         this.running = false;
+        final boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
+        if (isWindows) {
+            this.lockMonitor = new WindowsSessionLockMonitor(locked -> {
+                this.isLocked = locked;
+                poll();
+            });
+        }
     }
 
     @Override
@@ -58,6 +67,9 @@ public class IdleDetectionServiceImpl implements IdleDetectionService {
                 POLL_INTERVAL_SECONDS,
                 TimeUnit.SECONDS
         );
+        if (lockMonitor != null) {
+            lockMonitor.start();
+        }
         log.info("Idle detection started with threshold: {}s", idleThresholdSeconds);
     }
 
@@ -66,7 +78,7 @@ public class IdleDetectionServiceImpl implements IdleDetectionService {
             return;
         }
         final long currentIdleSeconds = idleProvider.getIdleTimeSeconds();
-        final boolean currentlyIdle = currentIdleSeconds >= idleThresholdSeconds;
+        final boolean currentlyIdle = isLocked || (currentIdleSeconds >= idleThresholdSeconds);
         runOnFxThread(() -> {
             final boolean wasIdle = isIdle.get();
             isIdle.set(currentlyIdle);
@@ -87,8 +99,19 @@ public class IdleDetectionServiceImpl implements IdleDetectionService {
             pollFuture.cancel(false);
             pollFuture = null;
         }
+        if (lockMonitor != null) {
+            lockMonitor.stop();
+        }
         scheduler.shutdownNow();
         log.info("Idle detection stopped");
+    }
+
+    void setLocked(final boolean locked) {
+        this.isLocked = locked;
+    }
+
+    WindowsSessionLockMonitor getLockMonitor() {
+        return lockMonitor;
     }
 
     @Override

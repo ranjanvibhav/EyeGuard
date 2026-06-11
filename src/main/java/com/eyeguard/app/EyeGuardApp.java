@@ -137,9 +137,9 @@ public class EyeGuardApp extends Application {
     }
 
     private void initIdleDetection() {
+        idleDetectionService.setOnIdleDetected(this::handleIdleDetected);
+        idleDetectionService.setOnActivityResumed(this::handleActivityResumed);
         if (currentSettings.isIdleDetectionEnabled()) {
-            idleDetectionService.setOnIdleDetected(this::handleIdleDetected);
-            idleDetectionService.setOnActivityResumed(this::handleActivityResumed);
             idleDetectionService.start();
             LOGGER.info("Idle detection enabled");
         } else {
@@ -321,9 +321,9 @@ public class EyeGuardApp extends Application {
     private void setupFullscreenDetection() {
         final SystemFullscreenProvider provider = FullscreenProviderFactory.create();
         fullscreenDetectionService = new FullscreenDetectionServiceImpl(provider);
+        fullscreenDetectionService.setOnFullscreenEntered(this::handleFullscreenEntered);
+        fullscreenDetectionService.setOnFullscreenExited(this::handleFullscreenExited);
         if (currentSettings.isFullscreenPauseEnabled()) {
-            fullscreenDetectionService.setOnFullscreenEntered(this::handleFullscreenEntered);
-            fullscreenDetectionService.setOnFullscreenExited(this::handleFullscreenExited);
             fullscreenDetectionService.start();
             LOGGER.info("Fullscreen detection enabled");
         } else {
