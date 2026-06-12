@@ -148,8 +148,9 @@ public class EyeGuardApp extends Application {
     }
 
     private void handleIdleDetected() {
-        LOGGER.info("Idle detected — pausing reminders");
+        LOGGER.info("Idle detected — resetting and pausing reminders");
         if (dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
+            timerService.reset(getConfiguredIntervalSeconds());
             timerService.pause();
         }
     }
@@ -159,6 +160,16 @@ public class EyeGuardApp extends Application {
         if (timerService.getTimerState() == com.eyeguard.model.TimerState.PAUSED
                 && dndService.getDndState() == com.eyeguard.model.DndState.INACTIVE) {
             timerService.resume();
+        }
+    }
+
+    private int getConfiguredIntervalSeconds() {
+        try {
+            return configurationService.loadSettings()
+                    .getReminderIntervalMinutes() * 60;
+        } catch (final SettingsLoadException e) {
+            LOGGER.error("Failed to load settings for timer reset", e);
+            return com.eyeguard.model.SettingsConstraints.DEFAULT_REMINDER_INTERVAL * 60;
         }
     }
 
