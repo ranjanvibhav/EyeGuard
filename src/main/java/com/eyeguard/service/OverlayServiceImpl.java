@@ -4,6 +4,11 @@ import com.eyeguard.exception.EyeGuardException;
 import com.eyeguard.view.BreakOverlayController;
 import com.eyeguard.viewmodel.BreakOverlayViewModel;
 import com.eyeguard.util.IconLoader;
+import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.WinDef.HWND;
+import com.sun.jna.platform.win32.WinDef.LPARAM;
+import com.sun.jna.platform.win32.WinDef.WPARAM;
+import com.sun.jna.platform.win32.User32;
 import java.io.IOException;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -42,20 +47,18 @@ public class OverlayServiceImpl implements OverlayService {
     @Override
     public void showOverlay() {
         if (!Platform.isFxApplicationThread()) {
-            LOGGER.error("showOverlay must be called on the JavaFX Application Thread");
+            LOGGER.error("showOverlay must be called on FX Thread");
             return;
         }
         try {
-            LOGGER.debug("Loading break overlay UI...");
             final FXMLLoader loader = new FXMLLoader(getClass().getResource(FXML_PATH));
             final Parent root = loader.load();
             final BreakOverlayController controller = loader.getController();
             controller.setViewModel(viewModel);
             configureOverlayStage(root);
-            LOGGER.info("Break overlay shown");
+            pauseMediaIfWindows();
         } catch (final IOException exception) {
-            LOGGER.error("Failed to load break overlay FXML layout from " + FXML_PATH, exception);
-            throw new EyeGuardException("Failed to load break overlay user interface", exception);
+            throw new EyeGuardException("Failed to load break overlay UI", exception);
         }
     }
 
@@ -84,13 +87,28 @@ public class OverlayServiceImpl implements OverlayService {
             Platform.runLater(this::hideOverlay);
             return;
         }
-
         if (overlayStage != null) {
             overlayStage.close();
             overlayStage = null;
             LOGGER.info("Break overlay hidden");
         } else {
             LOGGER.warn("hideOverlay called but overlayStage is already null");
+        }
+    }
+
+    private void pauseMediaIfWindows() {
+        final String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("win")) {
+            try {
+                final HWND broadcast = new HWND(Pointer.createConstant(0xFFFF));
+                final int WM_APPCOMMAND = 0x0319;
+                final int APPCOMMAND_MEDIA_PAUSE = 47;
+                final LPARAM lParam = new LPARAM((long) APPCOMMAND_MEDIA_PAUSE << 16);
+                User32.INSTANCE.PostMessage(broadcast, WM_APPCOMMAND, new WPARAM(0), lParam);
+                LOGGER.info("System-wide media pause command sent via PostMessage");
+            } catch (final Exception e) {
+                LOGGER.warn("Failed to send system-wide media pause: {}", e.getMessage());
+            }
         }
     }
 }

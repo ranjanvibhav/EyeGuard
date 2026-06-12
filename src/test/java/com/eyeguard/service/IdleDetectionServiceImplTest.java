@@ -156,6 +156,40 @@ class IdleDetectionServiceImplTest {
         latch.countDown();
     }
 
+    @Test
+    void testOnScreenUnlockedCallbackAfterLockThenUnlock() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicInteger activeCount = new AtomicInteger(0);
+        service.setOnActivityResumed(activeCount::incrementAndGet);
+        service.start();
+        Platform.runLater(() -> {
+            service.setLocked(true);
+            service.poll();
+            service.setLocked(false);
+            service.poll();
+            assertEquals(1, activeCount.get());
+            latch.countDown();
+        });
+        assertTrue(latch.await(LATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+    }
+
+    @Test
+    void testOnActivityResumedCallbackAfterIdleThenActive() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicInteger activeCount = new AtomicInteger(0);
+        service.setOnActivityResumed(activeCount::incrementAndGet);
+        service.start();
+        Platform.runLater(() -> {
+            stubProvider.setIdleSeconds(400);
+            service.poll();
+            stubProvider.setIdleSeconds(10);
+            service.poll();
+            assertEquals(1, activeCount.get());
+            latch.countDown();
+        });
+        assertTrue(latch.await(LATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+    }
+
     private static class StubIdleProvider implements SystemIdleProvider {
         private long idleSeconds = 0;
         public void setIdleSeconds(final long s) { this.idleSeconds = s; }
