@@ -45,6 +45,7 @@ public class MainWindowViewModel {
     private TimerService timerService;
     private DndService dndService;
     private FullscreenDetectionService fullscreenDetectionService;
+    private com.eyeguard.service.StatisticsService statisticsService;
 
     /**
      * Constructs the MainWindowViewModel and logs initialization.
@@ -55,8 +56,6 @@ public class MainWindowViewModel {
 
     /**
      * Constructs the MainWindowViewModel bound to the TimerService properties.
-     *
-     * @param timerService the core countdown timer service
      */
     public MainWindowViewModel(final TimerService timerService) {
         this.timerService = timerService;
@@ -70,9 +69,6 @@ public class MainWindowViewModel {
 
     /**
      * Constructs the MainWindowViewModel bound to the TimerService and DndService.
-     *
-     * @param timerService the core timer service
-     * @param dndService   the DND state service
      */
     public MainWindowViewModel(final TimerService timerService, final DndService dndService) {
         this(timerService);
@@ -84,10 +80,6 @@ public class MainWindowViewModel {
 
     /**
      * Constructs the MainWindowViewModel bound to the TimerService, DndService, and FullscreenDetectionService.
-     *
-     * @param timerService               the core timer service
-     * @param dndService                 the DND state service
-     * @param fullscreenDetectionService the fullscreen detection service
      */
     public MainWindowViewModel(final TimerService timerService,
                                final DndService dndService,
@@ -102,6 +94,37 @@ public class MainWindowViewModel {
                     updateStatusFromState(timerService.getTimerState());
                 }
             });
+    }
+
+    /**
+     * Master constructor including StatisticsService.
+     */
+    public MainWindowViewModel(final TimerService timerService,
+                               final DndService dndService,
+                               final FullscreenDetectionService fullscreenDetectionService,
+                               final com.eyeguard.service.StatisticsService statisticsService) {
+        this(timerService, dndService, fullscreenDetectionService);
+        this.statisticsService = statisticsService;
+        bindStatistics(statisticsService);
+    }
+
+    private void bindTimerAndDnd() {
+        // Obsolete - functionality restored to original constructors
+    }
+
+    private void bindStatistics(final com.eyeguard.service.StatisticsService stats) {
+        breaksTaken.set(stats.breaksTakenProperty().get());
+        snoozedCount.set(stats.snoozedCountProperty().get());
+        compliancePercent.set(stats.compliancePercentProperty().get());
+        sessionDuration.set(stats.sessionDurationProperty().get());
+        streakText.set("Streak: " + stats.streakDaysProperty().get() + " days");
+
+        stats.breaksTakenProperty().addListener((obs, old, newVal) -> breaksTaken.set(newVal.intValue()));
+        stats.snoozedCountProperty().addListener((obs, old, newVal) -> snoozedCount.set(newVal.intValue()));
+        stats.compliancePercentProperty().addListener((obs, old, newVal) -> compliancePercent.set(newVal));
+        stats.sessionDurationProperty().addListener((obs, old, newVal) -> sessionDuration.set(newVal));
+        stats.streakDaysProperty().addListener((obs, old, newVal) ->
+            streakText.set("Streak: " + newVal.intValue() + " days"));
     }
 
     /**

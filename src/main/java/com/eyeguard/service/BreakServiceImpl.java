@@ -30,6 +30,7 @@ public class BreakServiceImpl implements BreakService {
     private final OverlayService overlayService;
     private final BreakOverlayViewModel overlayViewModel;
     private final ConfigurationService configurationService;
+    private final StatisticsService statisticsService;
     private final ScheduledExecutorService breakScheduler;
     private ScheduledFuture<?> breakFuture;
     private BreakSession currentSession;
@@ -38,29 +39,36 @@ public class BreakServiceImpl implements BreakService {
 
     /**
      * Constructs a BreakServiceImpl with dependencies.
-     *
-     * @param timerService         the core timer service
-     * @param overlayService       the overlay stage service
-     * @param overlayViewModel     the break overlay view model
-     * @param configurationService the application configuration service
      */
     public BreakServiceImpl(
             final TimerService timerService,
             final OverlayService overlayService,
             final BreakOverlayViewModel overlayViewModel,
             final ConfigurationService configurationService) {
+        this(timerService, overlayService, overlayViewModel, configurationService, new NoOpStatisticsService());
+    }
+
+    /**
+     * Constructs a BreakServiceImpl with dependencies including StatisticsService.
+     */
+    public BreakServiceImpl(
+            final TimerService timerService,
+            final OverlayService overlayService,
+            final BreakOverlayViewModel overlayViewModel,
+            final ConfigurationService configurationService,
+            final StatisticsService statisticsService) {
         this.timerService = timerService;
         this.overlayService = overlayService;
         this.overlayViewModel = overlayViewModel;
         this.configurationService = configurationService;
-        this.breakScheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
-            final Thread thread = new Thread(runnable, "eyeguard-break-timer");
-            thread.setDaemon(true);
-            return thread;
+        this.statisticsService = statisticsService;
+        this.breakScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            final Thread t = new Thread(r, "eyeguard-break-timer");
+            t.setDaemon(true);
+            return t;
         });
         this.breakCountdown = new SimpleIntegerProperty(20);
         this.breakActive = new SimpleBooleanProperty(false);
-
         this.overlayViewModel.setOnDone(this::completeBreak);
         this.overlayViewModel.setOnSnooze(this::snoozeBreak);
     }
@@ -121,6 +129,7 @@ public class BreakServiceImpl implements BreakService {
         breakActive.set(false);
         overlayService.hideOverlay();
         final Settings settings = loadSettingsSafely();
+        statisticsService.recordBreakCompleted();
         timerService.reset(settings.getReminderIntervalMinutes() * 60);
         LOGGER.info("Break completed successfully");
     }
@@ -137,6 +146,7 @@ public class BreakServiceImpl implements BreakService {
         breakActive.set(false);
         overlayService.hideOverlay();
         final Settings settings = loadSettingsSafely();
+        statisticsService.recordBreakSnoozed();
         timerService.reset(settings.getSnoozeDurationMinutes() * 60);
         LOGGER.info("Break snoozed");
     }

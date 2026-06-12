@@ -79,6 +79,35 @@ public class DashboardViewModel {
         updateStatus(timerService, dndService);
     }
 
+    /**
+     * Master constructor including StatisticsService.
+     */
+    public DashboardViewModel(final TimerService timerService,
+                              final DndService dndService,
+                              final IdleDetectionService idleService,
+                              final com.eyeguard.service.StatisticsService statisticsService) {
+        this(timerService, dndService, idleService);
+        bindStatistics(statisticsService);
+    }
+
+    private void updateIdleStatus(final boolean isNowIdle) {
+        // Obsolete - functionality restored to original constructors
+    }
+
+    private void bindStatistics(final com.eyeguard.service.StatisticsService stats) {
+        breaksTaken.set(stats.breaksTakenProperty().get());
+        snoozedCount.set(stats.snoozedCountProperty().get());
+        compliancePercent.set(stats.compliancePercentProperty().get());
+        streakDays.set(stats.streakDaysProperty().get());
+        sessionDuration.set(stats.sessionDurationProperty().get());
+
+        stats.breaksTakenProperty().addListener((obs, old, newVal) -> breaksTaken.set(newVal.intValue()));
+        stats.snoozedCountProperty().addListener((obs, old, newVal) -> snoozedCount.set(newVal.intValue()));
+        stats.compliancePercentProperty().addListener((obs, old, newVal) -> compliancePercent.set(newVal));
+        stats.streakDaysProperty().addListener((obs, old, newVal) -> streakDays.set(newVal.intValue()));
+        stats.sessionDurationProperty().addListener((obs, old, newVal) -> sessionDuration.set(newVal));
+    }
+
     private void updateStatus(final TimerService timer, final DndService dnd) {
         final com.eyeguard.model.DndState dndState = dnd.getDndState();
         if (dndState != com.eyeguard.model.DndState.INACTIVE) {
